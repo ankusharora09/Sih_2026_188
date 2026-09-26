@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-paper text-ink font-grotesk antialiased;
+  background-image:
+    linear-gradient(rgba(16, 16, 16, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 16, 16, 0.028) 1px, transparent 1px);
+  background-size: 28px 28px;
+  min-height: 100vh;
+}
+
+::selection {
+  background: #101010;
+  color: #f2f0ea;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #101010;
+  border: 2px solid #f2f0ea;
+}
+*::-webkit-scrollbar-track {
+  background: #e9e6de;
+}
+
+*:focus-visible {
+  outline: 2px solid #d9202c;
+  outline-offset: 1px;
+}
+
+/* mechanical skeleton: hard stripes, no shimmer */
+.skeleton {
+  @apply bg-paper-2 border border-rule-soft relative overflow-hidden;
+}
+.skeleton::after {
+  content: '';
+  @apply absolute inset-0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent 0 8px,
+    rgba(16, 16, 16, 0.05) 8px 16px
+  );
+}
+
+/* panel label — the section-number chip used across the system */
+.sec-label {
+  @apply inline-block bg-ink px-1.5 py-0.5 font-mono text-[9.5px] font-medium tracking-[0.14em] text-paper;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

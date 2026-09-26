@@ -1,0 +1,86 @@
+# Python artefacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+
+# Virtual environments
+.env
+.venv/
+venv/
+
+# IDE & editor files
+.idea/
+.vscode/
+*.swp
+*.sublime-workspace
+
+# Logs
+logs/
+*.log
+
+# Data directories (ignored – large files, licensing constraints)
+data/raw/
+data/processed/
+data/synthetic/
+data/
+data_gt2/
+sidtd_download/
+
+# User uploads — personal documents / screenshots, never publish
+uploads/
+outputs/
+
+# Node / dashboard build inputs (dist/ is committed so the SPA serves without a build step)
+node_modules/
+
+# Local agent workspace
+.freebuff/
+
+# Vendored third-party reference repos (kept on disk, not published)
+PaddleOCR-main/
+insightface-master/
+faiss-main/
+FaceForensics-master/
+midv500-master/
+CelebA-Spoof-master/
+
+# Scratch files
+scratch_*.py
+scratch_*.png
+server.err
+
+# SQLite database (development)
+dev.db
+
+# Build artefacts
+build/
+*.egg
+*.egg-info/
+.dist/
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# Secrets / credentials
+secrets.json
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Redundant legacy checkpoint (superseded by document_forgery_gt2.pth)
+models/document_forgery_resnet18.pth
+
+# Runtime databases & scratch renders
+database.sqlite3
+database.db
+*.sqlite3
+bench_tmp.png
+photo_candidate.png
+sec_[0-9]*.png
+thumb_*.jpg
+yunet_aadhaar_crop.png
+vis_aadhaar_box.png

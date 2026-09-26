@@ -1,0 +1,1619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>IDENTITYSHIELD — FORENSIC COMMAND CENTER / SIH-26188</title>
+<meta name="description" content="AI-Based Fake Identity & Document Screening System — Forensic Command Center" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   IDENTITYSHIELD FORENSIC COMMAND CENTER
+   Brutalist engineering UI. Paper #F4F1E8, ink #0A0A0A.
+   Status colors are semantic only.
+   ============================================================ */
+:root {
+  --paper: #F4F1E8;
+  --paper-2: #ECE8DC;
+  --paper-3: #E2DDCE;
+  --ink: #0A0A0A;
+  --ink-soft: #3A3833;
+  --green: #159447;
+  --orange: #F05A00;
+  --red: #D71920;
+  --yellow: #D6A600;
+  --gray: #77736A;
+  --bd: 2px solid var(--ink);
+  --bd-heavy: 3px solid var(--ink);
+  --bd-thin: 1px solid var(--ink);
+  --mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', monospace;
+  --cond: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif;
+}
+* { box-sizing: border-box; border-radius: 0 !important; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--cond);
+  background:
+    repeating-linear-gradient(0deg, transparent 0 31px, rgba(10,10,10,0.045) 31px 32px),
+    repeating-linear-gradient(90deg, transparent 0 31px, rgba(10,10,10,0.045) 31px 32px),
+    var(--paper);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.35;
+  min-height: 100vh;
+}
+::selection { background: var(--ink); color: var(--paper); }
+a { color: inherit; }
+button, input, select, textarea { font-family: var(--mono); }
+h1, h2, h3 { font-family: var(--cond); margin: 0; }
+
+/* ---------- LAYOUT FRAME ---------- */
+#app { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+#app.collapsed { grid-template-columns: 52px 1fr; }
+
+/* ---------- SIDEBAR ---------- */
+#sidebar {
+  border-right: var(--bd-heavy);
+  background: var(--paper);
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.side-head { border-bottom: var(--bd); padding: 12px; }
+.brand-row { display: flex; align-items: center; gap: 8px; }
+.brand-mark {
+  width: 26px; height: 26px; background: var(--ink); color: var(--paper);
+  display: grid; place-items: center; font-family: var(--mono); font-weight: 700; font-size: 13px;
+  flex: none;
+}
+.brand-name { font-weight: 700; font-size: 15px; letter-spacing: 0.04em; line-height: 1.1; }
+.brand-sub { font-family: var(--mono); font-size: 9px; color: var(--ink-soft); margin-top: 3px; letter-spacing: 0.08em; }
+.nav-list { list-style: none; margin: 0; padding: 0; border-bottom: var(--bd); }
+.nav-list li { border-bottom: var(--bd-thin); }
+.nav-list li:last-child { border-bottom: none; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 11px 12px; background: none; border: none; cursor: pointer;
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--ink); text-align: left;
+}
+.nav-item .idx { color: var(--gray); font-size: 10px; }
+.nav-item:hover { background: var(--paper-2); }
+.nav-item.active { background: var(--ink); color: var(--paper); }
+.nav-item.active .idx { color: var(--paper); opacity: .65; }
+.nav-item.active::after { content: "▸"; margin-left: auto; font-size: 10px; }
+.side-foot { margin-top: auto; border-top: var(--bd); font-family: var(--mono); font-size: 9.5px; }
+.side-foot .row { padding: 8px 12px; border-bottom: var(--bd-thin); display: flex; justify-content: space-between; gap: 6px; letter-spacing: 0.04em; }
+.side-foot .row:last-child { border-bottom: none; }
+.dot { display: inline-block; width: 8px; height: 8px; background: var(--green); flex: none; margin-top: 3px; }
+.dot.pulse { animation: dotpulse 1.4s steps(2) infinite; }
+@keyframes dotpulse { 50% { opacity: .25; } }
+
+/* ---------- TOP COMMAND BAR ---------- */
+#topbar {
+  border-bottom: var(--bd-heavy); background: var(--paper);
+  display: flex; align-items: stretch; height: 46px; position: sticky; top: 0; z-index: 60;
+}
+.tb-search { display: flex; align-items: center; gap: 8px; padding: 0 12px; border-right: var(--bd); flex: 1; min-width: 0; }
+.tb-search input {
+  flex: 1; border: none; outline: none; background: transparent; font-size: 12px; letter-spacing: .03em; color: var(--ink);
+  text-transform: uppercase;
+}
+.tb-search input::placeholder { color: var(--gray); }
+kbd {
+  border: var(--bd-thin); padding: 1px 5px; font-size: 9px; font-family: var(--mono);
+  background: var(--paper-2); letter-spacing: .05em;
+}
+.tb-cell {
+  display: flex; align-items: center; gap: 8px; padding: 0 14px; border-left: var(--bd);
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--paper); cursor: pointer; border-top: none; border-bottom: none; border-right: none;
+}
+.tb-cell:hover { background: var(--ink); color: var(--paper); }
+.tb-cell .sq { width: 9px; height: 9px; background: var(--green); }
+.tb-cell.btn-exit .sq { background: var(--red); }
+
+/* ---------- MAIN ---------- */
+#main { min-width: 0; display: flex; flex-direction: column; }
+.view { display: none; padding: 16px; gap: 16px; flex-direction: column; }
+.view.on { display: flex; }
+
+/* section header bars */
+.sec-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  border: var(--bd-heavy); background: var(--paper);
+}
+.sec-head .lft { display: flex; align-items: center; gap: 10px; padding: 8px 12px; min-width: 0; }
+.sec-tag {
+  background: var(--ink); color: var(--paper); font-family: var(--mono); font-size: 11px;
+  padding: 3px 8px; letter-spacing: .08em; flex: none;
+}
+.sec-title { font-weight: 700; font-size: 15px; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+.sec-meta { font-family: var(--mono); font-size: 9.5px; color: var(--ink-soft); letter-spacing: .06em; margin-left: auto; padding: 0 12px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.panel { border: var(--bd-heavy); background: var(--paper); }
+.panel + .panel { margin-top: 0; }
+
+/* generic technical rows */
+.trow { display: flex; align-items: baseline; gap: 10px; padding: 7px 12px; border-bottom: var(--bd-thin); font-size: 13px; }
+.trow:last-child { border-bottom: none; }
+.trow .k { font-family: var(--mono); font-size: 9.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-soft); width: 130px; flex: none; }
+.trow .v { font-family: var(--mono); font-size: 12px; word-break: break-all; }
+.trow .v.strong { font-weight: 700; }
+
+/* status squares + labels */
+.st { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; letter-spacing: .07em; font-weight: 600; }
+.st .sq { width: 10px; height: 10px; flex: none; }
+.st-pass { color: var(--green); } .st-pass .sq { background: var(--green); }
+.st-review { color: var(--orange); } .st-review .sq { background: var(--orange); }
+.st-fail { color: var(--red); } .st-fail .sq { background: var(--red); }
+.st-notrun { color: var(--gray); } .st-notrun .sq { background: var(--gray); }
+.st-unavail { color: var(--gray); }
+.st-unavail .sq { background: repeating-linear-gradient(45deg, var(--gray) 0 3px, var(--paper) 3px 6px); border: 1px solid var(--gray); }
+.st-unavail .sq, .st-notrun .sq { border: 1px solid currentColor; }
+
+/* buttons */
+.btn {
+  border: var(--bd); background: var(--paper); color: var(--ink); cursor: pointer;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  padding: 8px 14px;
+}
+.btn:hover { background: var(--paper-2); }
+.btn:active { transform: translate(1px, 1px); }
+.btn.primary { background: var(--ink); color: var(--paper); }
+.btn.primary:hover { background: var(--ink-soft); }
+.btn.o { border-color: var(--orange); color: var(--orange); }
+.btn.o:hover { background: var(--orange); color: var(--paper); }
+.btn.r { border-color: var(--red); color: var(--red); }
+.btn.r:hover { background: var(--red); color: var(--paper); }
+.btn.g { border-color: var(--green); color: var(--green); }
+.btn.g:hover { background: var(--green); color: var(--paper); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn.sm { padding: 4px 8px; font-size: 9.5px; }
+
+/* intake dropzone */
+.drop {
+  position: relative; margin: 16px; border: 2px dashed var(--ink); min-height: 190px;
+  display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px;
+  cursor: pointer; text-align: center; padding: 18px;
+}
+.drop:hover, .drop.over { background: var(--paper-2); }
+.drop .corner { position: absolute; width: 14px; height: 14px; border: 0 solid var(--ink); }
+.drop .c-tl { top: -2px; left: -2px; border-top-width: 3px; border-left-width: 3px; }
+.drop .c-tr { top: -2px; right: -2px; border-top-width: 3px; border-right-width: 3px; }
+.drop .c-bl { bottom: -2px; left: -2px; border-bottom-width: 3px; border-left-width: 3px; }
+.drop .c-br { bottom: -2px; right: -2px; border-bottom-width: 3px; border-right-width: 3px; }
+.drop .up-icon { width: 34px; height: 34px; border: var(--bd); display: grid; place-items: center; font-family: var(--mono); font-size: 18px; font-weight: 700; }
+.drop .d-main { font-family: var(--cond); font-weight: 700; font-size: 18px; letter-spacing: .08em; }
+.drop .d-sub { font-family: var(--mono); font-size: 10px; color: var(--ink-soft); letter-spacing: .08em; }
+.preview-wrap { display: none; margin: 16px; border: var(--bd); }
+.preview-wrap.on { display: block; }
+.preview-img-box { border-bottom: var(--bd); background: var(--paper-3); max-height: 300px; overflow: hidden; display: flex; justify-content: center; }
+.preview-img-box img { max-width: 100%; max-height: 300px; display: block; }
+.demo-tag {
+  display: inline-block; border: 1px solid var(--yellow); color: var(--yellow);
+  font-family: var(--mono); font-size: 9px; letter-spacing: .1em; padding: 2px 6px; margin: 8px 12px 0;
+}
+.field-input {
+  width: 100%; border: var(--bd); background: var(--paper); padding: 8px 10px; font-size: 13px;
+  color: var(--ink); outline: none;
+}
+.field-input:focus { border-color: var(--orange); }
+.lbl { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); display: block; margin-bottom: 4px; }
+
+/* biometric intake */
+.bio-live { display: inline-block; width: 8px; height: 8px; background: var(--red); margin-right: 6px; animation: dotpulse 1s steps(2) infinite; }
+#bio-status { white-space: normal; }
+
+/* ---------- PROCESSING LEDGER ---------- */
+.ledger { display: flex; flex-direction: column; }
+.led-row { display: grid; grid-template-columns: 46px 14px 1fr auto; gap: 10px; border-bottom: var(--bd-thin); align-items: stretch; }
+.led-row:last-child { border-bottom: none; }
+.led-num { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); padding: 10px 0 0 12px; }
+.led-rail { position: relative; }
+.led-rail::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--ink); }
+.led-row:first-child .led-rail::before { top: 14px; }
+.led-row:last-child .led-rail::before { bottom: auto; height: 14px; }
+.led-sq { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; background: var(--paper); border: 2px solid var(--ink); }
+.led-sq.pass { background: var(--green); border-color: var(--green); }
+.led-sq.review { background: var(--orange); border-color: var(--orange); }
+.led-sq.fail { background: var(--red); border-color: var(--red); }
+.led-sq.notrun { background: var(--paper); border-color: var(--gray); }
+.led-sq.unavail { border-color: var(--gray); background: repeating-linear-gradient(45deg, var(--gray) 0 3px, var(--paper) 3px 6px); }
+.led-sq.running { background: var(--paper); border-color: var(--ink); animation: dotpulse 1s steps(2) infinite; }
+.led-body { padding: 9px 0; min-width: 0; }
+.led-name { font-family: var(--cond); font-weight: 700; font-size: 13.5px; letter-spacing: .07em; text-transform: uppercase; }
+.led-rule { height: 0; border-top: 2px solid var(--ink); margin: 4px 0 3px; width: 100%; }
+.led-reason { font-family: var(--mono); font-size: 10px; color: var(--ink-soft); letter-spacing: .03em; text-transform: uppercase; }
+.led-right { text-align: right; padding: 10px 12px 10px 0; white-space: nowrap; }
+.led-status { font-family: var(--mono); font-size: 10.5px; font-weight: 700; letter-spacing: .09em; }
+.led-status.pass { color: var(--green); }
+.led-status.review { color: var(--orange); }
+.led-status.fail { color: var(--red); }
+.led-status.notrun, .led-status.unavail { color: var(--gray); }
+.led-ms { font-family: var(--mono); font-size: 10px; color: var(--ink-soft); margin-top: 3px; }
+.scanline { position: relative; overflow: hidden; }
+.scanline::after {
+  content: ""; position: absolute; left: 0; right: 0; top: -4px; height: 3px; background: var(--orange);
+  animation: scan 1.1s linear infinite;
+}
+@keyframes scan { to { top: 100%; } }
+
+/* ---------- VERIFICATION MATRIX ---------- */
+.matrix { width: 100%; border-collapse: collapse; }
+.matrix th {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+  text-align: left; padding: 6px 12px; border-bottom: var(--bd); color: var(--ink-soft); font-weight: 600;
+}
+.matrix td { padding: 8px 12px; border-bottom: var(--bd-thin); font-family: var(--mono); font-size: 11.5px; }
+.matrix tr:last-child td { border-bottom: none; }
+.matrix td.m-name { font-family: var(--cond); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-size: 12.5px; }
+.cov-track { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: var(--bd); }
+.cov-cells { display: flex; gap: 3px; flex: none; }
+.cov-cell { width: 11px; height: 14px; border: 1px solid var(--ink); background: var(--paper); }
+.cov-cell.on { background: var(--ink); }
+.cov-num { font-family: var(--mono); font-size: 11px; font-weight: 700; }
+
+/* ---------- VERDICT ---------- */
+.verdict-grid { display: grid; grid-template-columns: 1.35fr 1fr 1fr 1fr; }
+.verdict-cell { border-right: var(--bd); padding: 12px; min-width: 0; }
+.verdict-cell:last-child { border-right: none; }
+.v-k { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px; }
+.v-big { font-family: var(--mono); font-weight: 700; font-size: 40px; line-height: 1; letter-spacing: .01em; }
+.v-big small { font-size: 13px; color: var(--ink-soft); font-weight: 500; }
+.v-decision { font-family: var(--cond); font-weight: 700; font-size: 19px; letter-spacing: .06em; line-height: 1.15; text-transform: uppercase; }
+.v-decision.review { color: var(--orange); }
+.v-decision.reject { color: var(--red); }
+.v-decision.verify { color: var(--green); }
+.v-sub { font-family: var(--mono); font-size: 9px; letter-spacing: .06em; color: var(--ink-soft); margin-top: 6px; text-transform: uppercase; }
+.verdict-banner { border-top: var(--bd-heavy); display: grid; grid-template-columns: 1fr 1fr; }
+.vb-half { padding: 10px 12px; }
+.vb-half + .vb-half { border-left: var(--bd); }
+.vb-title { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; margin-bottom: 4px; font-weight: 700; }
+.vb-title.ok { color: var(--green); } .vb-title.gap { color: var(--orange); }
+.vb-text { font-family: var(--mono); font-size: 10.5px; letter-spacing: .03em; text-transform: uppercase; }
+.distinct {
+  margin: 0; border-top: var(--bd); padding: 8px 12px; display: flex; gap: 8px; align-items: center;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+}
+.distinct .mark { width: 12px; height: 12px; flex: none; }
+.distinct.fraud-clear .mark { background: var(--green); }
+.distinct.incomplete .mark { background: var(--orange); }
+
+/* why-review rows */
+.why-row { display: grid; grid-template-columns: 34px 1fr auto auto; gap: 10px; align-items: center; border-bottom: var(--bd-thin); padding: 8px 12px; }
+.why-row:last-child { border-bottom: none; }
+.why-num { font-family: var(--mono); font-size: 10px; color: var(--ink-soft); }
+.why-txt { font-family: var(--cond); font-weight: 600; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+.why-sev { font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: .09em; padding: 2px 7px; border: 1px solid; }
+.why-sev.high { color: var(--red); border-color: var(--red); }
+.why-sev.med { color: var(--orange); border-color: var(--orange); }
+.why-src { font-family: var(--mono); font-size: 9px; color: var(--ink-soft); letter-spacing: .08em; text-transform: uppercase; }
+
+/* factor rows */
+.fct-row { display: grid; grid-template-columns: 18px 1fr; gap: 8px; padding: 7px 12px; border-bottom: var(--bd-thin); font-family: var(--mono); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; align-items: baseline; }
+.fct-row:last-child { border-bottom: none; }
+.fct-row .plus { color: var(--green); font-weight: 700; }
+.fct-row .bang { color: var(--orange); font-weight: 700; }
+
+/* decision console */
+.decision-bar { display: grid; grid-template-columns: repeat(3, 1fr); border-top: var(--bd); }
+.dec-btn {
+  padding: 16px 10px; border: none; border-right: var(--bd); background: var(--paper); cursor: pointer;
+  font-family: var(--cond); font-weight: 700; font-size: 15px; letter-spacing: .1em; text-transform: uppercase;
+}
+.dec-btn:last-child { border-right: none; }
+.dec-btn small { display: block; font-family: var(--mono); font-size: 8.5px; letter-spacing: .1em; color: var(--ink-soft); margin-top: 4px; }
+.dec-btn:hover { outline: 3px solid var(--ink); outline-offset: -3px; }
+.dec-btn.d-verify { border-left: 6px solid var(--green); }
+.dec-btn.d-review { border-left: 6px solid var(--orange); }
+.dec-btn.d-reject { border-left: 6px solid var(--red); }
+
+/* audit trail */
+.audit-log {
+  font-family: var(--mono); font-size: 10.5px; line-height: 1.7; padding: 10px 12px;
+  max-height: 300px; overflow: auto; letter-spacing: .02em;
+}
+.audit-log .al-row { white-space: pre; }
+.audit-log .al-hash { color: var(--ink-soft); }
+.audit-log .al-type { font-weight: 600; }
+
+/* case table */
+.case-table { width: 100%; border-collapse: collapse; }
+.case-table th {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
+  text-align: left; padding: 7px 12px; border-bottom: var(--bd); background: var(--paper-2);
+}
+.case-table td { padding: 8px 12px; border-bottom: var(--bd-thin); font-size: 12.5px; font-family: var(--mono); }
+.case-table tr:hover td { background: var(--paper-2); }
+.case-table .c-name { font-family: var(--cond); font-weight: 700; font-size: 13px; letter-spacing: .03em; }
+.clickable { cursor: pointer; }
+
+/* two-col layout */
+.cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.cols-2-1 { display: grid; grid-template-columns: 380px 1fr; gap: 16px; align-items: start; }
+@media (max-width: 1100px) {
+  .cols-2, .cols-2-1 { grid-template-columns: 1fr; }
+  .verdict-grid { grid-template-columns: 1fr 1fr; }
+  .verdict-cell { border-bottom: var(--bd); }
+}
+
+/* modal */
+.modal-back {
+  position: fixed; inset: 0; background: rgba(10,10,10,.72); display: none;
+  place-items: center; z-index: 200; padding: 16px;
+}
+.modal-back.on { display: grid; }
+.modal { background: var(--paper); border: var(--bd-heavy); width: 480px; max-width: 96vw; }
+.modal .m-head { border-bottom: var(--bd); padding: 10px 14px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; font-weight: 700; display:flex; justify-content: space-between; }
+.modal .m-body { padding: 14px; font-size: 13px; }
+.modal .m-actions { display: grid; grid-template-columns: 1fr 1fr; border-top: var(--bd); }
+.modal .m-actions .btn { border: none; border-right: var(--bd); padding: 12px; }
+.modal .m-actions .btn:last-child { border-right: none; }
+
+/* toast */
+#toast {
+  position: fixed; bottom: 16px; right: 16px; background: var(--ink); color: var(--paper);
+  border: var(--bd); outline: 1px solid var(--paper); font-family: var(--mono); font-size: 11px;
+  padding: 10px 14px; letter-spacing: .05em; display: none; z-index: 300; text-transform: uppercase;
+}
+#toast.on { display: block; }
+
+/* generic empty/loading */
+.dim { color: var(--ink-soft); font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; padding: 14px 12px; }
+.hud-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border-top: var(--bd);
+}
+.hud-cell { padding: 10px 12px; border-right: var(--bd-thin); }
+.hud-cell:last-child { border-right: none; }
+.hud-k { font-family: var(--mono); font-size: 8.5px; letter-spacing: .12em; color: var(--ink-soft); text-transform: uppercase; }
+.hud-v { font-family: var(--mono); font-weight: 700; font-size: 16px; margin-top: 3px; }
+.tick { animation: tickin .25s steps(3); }
+@keyframes tickin { from { opacity: 0; transform: translateY(3px); } }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- ======================= SIDEBAR ======================= -->
+  <aside id="sidebar">
+    <div class="side-head">
+      <div class="brand-row">
+        <div class="brand-mark">IS</div>
+        <div>
+          <div class="brand-name">IDENTITYSHIELD</div>
+          <div class="brand-sub">26188 / FORENSICS</div>
+        </div>
+      </div>
+    </div>
+    <ul class="nav-list" id="nav"></ul>
+    <div class="side-foot">
+      <div class="row"><span>SYSTEM STATUS</span><span><span class="dot pulse"></span> ONLINE</span></div>
+      <div class="row"><span>AI ENGINE</span><span id="foot-engine">● BOOT</span></div>
+      <div class="row"><span>VERSION</span><span>2.1.0-FORENSIC</span></div>
+      <div class="row"><span>NODE</span><span>INDIA-01</span></div>
+    </div>
+  </aside>
+
+  <!-- ======================= MAIN ======================= -->
+  <div id="main">
+    <div id="topbar">
+      <div class="tb-search">
+        <span style="font-family:var(--mono);font-size:12px;">⌕</span>
+        <input id="global-search" placeholder="SEARCH MODULES / CASES" autocomplete="off" />
+        <kbd>CTRL+K</kbd>
+      </div>
+      <button class="tb-cell" id="tb-engine"><span class="sq"></span> AI ENGINE <span id="engine-word" style="color:inherit">CHECKING</span></button>
+      <button class="tb-cell" data-nav="system">SYSTEM</button>
+      <button class="tb-cell" id="tb-role">OFFICER</button>
+      <button class="tb-cell btn-exit" id="tb-exit"><span class="sq"></span> EXIT</button>
+    </div>
+
+    <!-- ============ VIEW: SCREENING ============ -->
+    <section class="view on" id="view-screening">
+      <div class="sec-head">
+        <div class="lft"><span class="sec-tag">01</span><span class="sec-title">SCREENING CONSOLE</span></div>
+        <span class="sec-meta">CASE: <span id="hud-case">—</span> · ENGINE: IDENTITYSCREEN · BUILD 2.1.0</span>
+      </div>
+
+      <div class="cols-2-1">
+        <!-- LEFT: intake + forensics -->
+        <div style="display:flex;flex-direction:column;gap:16px;min-width:0;">
+          <div class="panel">
+            <div class="sec-head" style="border:none;border-bottom:var(--bd-heavy);">
+              <div class="lft"><span class="sec-tag">A</span><span class="sec-title">DOCUMENT INTAKE</span></div>
+              <span class="sec-meta">JPEG / PNG / TIFF / PDF · MAX 10 MB</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:var(--bd);">
+              <div style="border-right:var(--bd);padding:12px;">
+                <label class="lbl" for="subject-name">APPLICANT NAME (AS DECLARED)</label>
+                <input class="field-input" id="subject-name" placeholder="SURNAME, GIVEN NAMES" autocomplete="off" />
+              </div>
+              <div style="padding:12px;display:flex;align-items:flex-end;gap:8px;">
+                <button class="btn primary" id="btn-newcase" style="flex:1;">01 / OPEN CASE</button>
+              </div>
+            </div>
+            <div class="drop" id="drop">
+              <input type="file" id="doc-input" accept="image/png,image/jpeg,image/tiff,application/pdf" style="display:none" />
+              <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
+              <div class="up-icon">↑</div>
+              <div class="d-main" id="drop-main">DROP DOCUMENT</div>
+              <div class="d-sub">JPEG / PNG / TIFF / PDF — OR CLICK TO BROWSE</div>
+              <div class="d-sub" id="drop-case-hint">OPEN A CASE FIRST — CASE ID REQUIRED FOR INTAKE</div>
+            </div>
+            <div class="preview-wrap" id="preview-wrap">
+              <div class="preview-img-box"><img id="preview-img" alt="document preview" /></div>
+              <span class="demo-tag" id="demo-tag">SYNTHETIC / DEMO DOCUMENT</span>
+              <div id="intake-meta"></div>
+            </div>
+          </div>
+
+          <div class="panel" id="biometric-panel">
+            <div class="sec-head" style="border:none;border-bottom:var(--bd-heavy);">
+              <div class="lft"><span class="sec-tag">B</span><span class="sec-title">BIOMETRIC INTAKE</span></div>
+              <span class="sec-meta">LIVE CAPTURE · FEEDS STAGES 04–06</span>
+            </div>
+            <div style="display:grid;grid-template-columns:230px 1fr;">
+              <div style="border-right:var(--bd);padding:12px;">
+                <div id="bio-cam-off" style="height:206px;border:2px dashed var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
+                  <span style="font-family:var(--mono);font-size:22px;">◉</span>
+                  <span style="font-family:var(--mono);font-size:9.5px;color:var(--ink-soft);letter-spacing:.08em;">CAMERA OFF</span>
+                </div>
+                <video id="bio-video" autoplay playsinline muted style="display:none;width:100%;border:var(--bd);background:#000;aspect-ratio:1;object-fit:cover;"></video>
+                <img id="bio-selfie" alt="live capture preview" style="display:none;width:100%;border:var(--bd);background:var(--paper-3);aspect-ratio:1;object-fit:cover;" />
+                <canvas id="bio-canvas" style="display:none;"></canvas>
+              </div>
+              <div style="padding:12px;display:flex;flex-direction:column;gap:4px;">
+                <div class="trow"><span class="k">STATUS</span><span class="v strong" id="bio-status">NO CAPTURE — STAGES 04–06 WILL NOT RUN</span></div>
+                <div class="trow"><span class="k">CAPTURE FILE</span><span class="v" id="bio-file">—</span></div>
+                <div class="trow"><span class="k">SHA-256</span><span class="v" id="bio-hash">—</span></div>
+                <div class="trow"><span class="k">NOTE</span><span class="v" style="color:var(--ink-soft)">LATEST CAPTURE ON THE CASE IS USED BY THE ENGINE</span></div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:10px;">
+                  <button class="btn" id="bio-start">◉ START CAMERA</button>
+                  <button class="btn primary" id="bio-capture" disabled>CAPTURE FRAME</button>
+                  <button class="btn" id="bio-upload-btn">UPLOAD PHOTO</button>
+                  <input type="file" id="bio-input" accept="image/png,image/jpeg" style="display:none" />
+                  <button class="btn r" id="bio-rescreen" style="display:none;">↻ RE-SCREEN WITH CAPTURE</button>
+                </div>
+                <div class="dim" style="font-family:var(--mono);font-size:9px;letter-spacing:.06em;padding-top:6px;">SELFIE INGESTED AS file_type=live_capture · SAME SHA-256 INTAKE AS DOCUMENTS · BROWSER PERMISSION REQUIRED FOR CAMERA</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" id="forensics-panel" style="display:none;">
+            <div class="sec-head" style="border:none;border-bottom:var(--bd-heavy);">
+              <div class="lft"><span class="sec-tag">C</span><span class="sec-title">DOCUMENT FORENSICS</span></div>
+              <span class="sec-meta">SHA-256 · EXIF · QUALITY</span>
+            </div>
+            <div id="forensics-rows"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: ledger -->
+        <div style="display:flex;flex-direction:column;gap:16px;min-width:0;">
+          <div class="panel">
+            <div class="sec-head" style="border:none;border-bottom:var(--bd-heavy);">
+              <div class="lft"><span class="sec-tag">D</span><span class="sec-title">PROCESSING LEDGER</span></div>
+              <span class="sec-meta" id="ledger-meta">AWAITING RUN</span>
+            </div>
+            <div class="ledger" id="ledger"></div>
+            <div class="dim" id="ledger-empty">NO ACTIVE RUN — STAGES WILL APPEAR AS THE ENGINE EXECUTES</div>
+          </div>
+
+          <div class="panel">
+            <div class="sec-head" style="border:none;border-bottom:var(--bd-heavy);">
+              <div class="lft"><span class="sec-tag">—</span><span class="sec-title">VERIFICATION MATRIX</span></div>
+            </div>
+            <div class="cov-track">
+              <span class="lbl" style="margin:0;">VERIFICATION COVERAGE</span>
+              <div class="cov-cells" id="cov-cells"></div>
+              <span class="cov-num" id="cov-num">0 / 6</span>
+            </div>
+            <table class="matrix" id="matrix">
+              <thead><tr><th>MODULE</th><th>STATUS</th><th>CONFIDENCE</th></tr></thead>
+              <tbody id="matrix-body"><tr><td colspan="3" class="dim">NO RUN DATA</td></tr></tbody>
+            </table>
+          </div>
+
+          <div class="panel" id="verdict-panel" style="display:none;">
+            <div class="sec-head" style="border:none;border-bottom:var(--bd-heavy);">
+              <div class="lft"><span class="sec-tag">E</span><span class="sec-title">VERDICT / RISK ENGINE OUTPUT</span></div>
+              <span class="sec-meta">DETERMINISTIC · REPRODUCIBLE</span>
+            </div>
+            <div class="verdict-grid">
+              <div class="verdict-cell">
+                <div class="v-k">RISK SCORE</div>
+                <div class="v-big" id="v-risk">—<small> /100</small></div>
+                <div class="v-sub" id="v-band">BAND: —</div>
+              </div>
+              <div class="verdict-cell">
+                <div class="v-k">CONFIDENCE</div>
+                <div class="v-big" id="v-conf">—<small> %</small></div>
+                <div class="v-sub">EVIDENCE-BACKED WEIGHT</div>
+              </div>
+              <div class="verdict-cell">
+                <div class="v-k">VERIFICATION</div>
+                <div class="v-big" id="v-verif">—<small> /6</small></div>
+                <div class="v-sub">DECISIVE CHECKS EXECUTED</div>
+              </div>
+              <div class="verdict-cell">
+                <div class="v-k">DECISION</div>
+                <div class="v-decision" id="v-decision">—</div>
+                <div class="v-sub" id="v-decision-sub">—</div>
+              </div>
+            </div>
+            <div class="distinct fraud-clear" id="distinct-fraud">
+              <span class="mark"></span>
+              <span id="distinct-fraud-txt">FRAUD SIGNAL: —</span>
+            </div>
+            <div class="distinct incomplete" id="distinct-incomplete">
+              <span class="mark"></span>
+              <span id="distinct-incomplete-txt">IDENTITY VERIFICATION: —</span>
+            </div>
+            <div class="verdict-banner">
+              <div class="vb-half">
+                <div class="vb-title ok">RISK FACTORS — FRAUD EVIDENCE</div>
+                <div id="risk-factors"></div>
+              </div>
+              <div class="vb-half">
+                <div class="vb-title gap">VERIFICATION GAPS — NOT EVIDENCE OF FRAUD</div>
+                <div id="verif-gaps"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" id="why-panel" style="display:none;">
+            <div class="sec-head" style="border:none;border-bottom:var(--bd-heavy);">
+              <div class="lft"><span class="sec-tag">F</span><span class="sec-title">WHY REVIEW?</span></div>
+              <span class="sec-meta">EVIDENCE GAPS OUTRANK A QUIET SCORE</span>
+            </div>
+            <div id="why-rows"></div>
+          </div>
+
+          <div class="panel" id="decision-panel" style="display:none;">
+            <div class="sec-head" style="border:none;border-bottom:var(--bd-heavy);">
+              <div class="lft"><span class="sec-tag">G</span><span class="sec-title">OFFICER DECISION</span></div>
+              <span class="sec-meta">HUMAN-IN-THE-LOOP · AUDITED</span>
+            </div>
+            <div class="decision-bar">
+              <button class="dec-btn d-verify" data-act="verify">VERIFY<small>IDENTITY CONFIRMED</small></button>
+              <button class="dec-btn d-review" data-act="review">REVIEW<small>ESCALATE FOR INVESTIGATION</small></button>
+              <button class="dec-btn d-reject" data-act="reject">REJECT<small>FRAUD DETECTED</small></button>
+            </div>
+            <div class="trow"><span class="k">DECISION NOTE</span><input class="field-input" id="decision-note" placeholder="OPTIONAL NOTE — SEALED INTO AUDIT LEDGER" /></div>
+            <div class="trow" id="decision-recorded" style="display:none;"><span class="k">RECORDED</span><span class="v strong" id="decision-recorded-v">—</span></div>
+          </div>
+
+          <div class="panel" id="audit-panel" style="display:none;">
+            <div class="sec-head" style="border:none;border-bottom:var(--bd-heavy);">
+              <div class="lft"><span class="sec-tag">H</span><span class="sec-title">AUDIT TRAIL</span></div>
+              <span style="display:flex;gap:6px;padding:6px 10px;">
+                <button class="btn sm" id="btn-copy-log">COPY LOG</button>
+                <button class="btn sm" id="btn-verify-chain">VERIFY INTEGRITY</button>
+              </span>
+            </div>
+            <div class="audit-log" id="audit-log"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: CASES ============ -->
+    <section class="view" id="view-cases">
+      <div class="sec-head">
+        <div class="lft"><span class="sec-tag">02</span><span class="sec-title">CASE REGISTRY</span></div>
+        <span class="sec-meta"><span id="cases-count">0</span> RECORDS · <button class="btn sm" id="btn-cases-refresh">REFRESH</button></span>
+      </div>
+      <div class="panel">
+        <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:var(--bd);">
+          <div style="border-right:var(--bd);padding:8px 12px;display:flex;align-items:center;gap:8px;">
+            <label class="lbl" style="margin:0;" for="case-filter-name">FILTER: NAME/ID</label>
+            <input class="field-input" id="case-filter-name" style="flex:1;" />
+          </div>
+          <div style="padding:8px 12px;display:flex;align-items:center;gap:8px;">
+            <label class="lbl" style="margin:0;" for="case-filter-risk">FILTER: RISK</label>
+            <select class="field-input" id="case-filter-risk">
+              <option value="">ALL</option>
+              <option value="high">HIGH</option>
+              <option value="medium">MEDIUM</option>
+              <option value="low">LOW</option>
+              <option value="review_required">REVIEW REQUIRED</option>
+              <option value="not screened">NOT SCREENED</option>
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="case-table">
+            <thead><tr>
+              <th>CASE ID</th><th>SUBJECT</th><th>STATUS</th><th>RISK</th><th>FILES</th><th>CREATED</th><th></th>
+            </tr></thead>
+            <tbody id="cases-body"></tbody>
+          </table>
+        </div>
+        <div class="dim" id="cases-empty" style="display:none;">NO CASES MATCH FILTERS</div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: INVESTIGATIONS ============ -->
+    <section class="view" id="view-investigations">
+      <div class="sec-head">
+        <div class="lft"><span class="sec-tag">03</span><span class="sec-title">INVESTIGATIONS — CROSS-CASE INTELLIGENCE</span></div>
+        <span class="sec-meta">FRAUD GRAPH · IDENTITY REUSE MAP</span>
+      </div>
+      <div class="panel">
+        <div class="sec-head" style="border:none;border-bottom:var(--bd);">
+          <div class="lft"><span class="sec-tag">A</span><span class="sec-title">FRAUD GRAPH</span></div>
+          <span class="sec-meta">REUSE EDGES = REPEATED SIGNAL, NOT GUILT</span>
+        </div>
+        <div id="fraud-graph" style="padding:12px;max-height:420px;overflow:auto;"><div class="dim">LOADING…</div></div>
+      </div>
+      <div class="panel">
+        <div class="sec-head" style="border:none;border-bottom:var(--bd);">
+          <div class="lft"><span class="sec-tag">B</span><span class="sec-title">RECENT ACTIVITY</span></div>
+          <span class="sec-meta">LAST AUDIT EVENTS</span>
+        </div>
+        <div class="audit-log" id="activity-log" style="max-height:260px;"><div class="dim">LOADING…</div></div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: AUDIT LEDGER ============ -->
+    <section class="view" id="view-audit">
+      <div class="sec-head">
+        <div class="lft"><span class="sec-tag">04</span><span class="sec-title">AUDIT LEDGER — SHA-256 HASH CHAIN</span></div>
+        <span class="sec-meta"><button class="btn sm" id="btn-audit-verify">VERIFY CHAIN</button></span>
+      </div>
+      <div class="panel">
+        <div class="hud-grid" id="audit-hud"></div>
+      </div>
+      <div class="panel">
+        <div class="sec-head" style="border:none;border-bottom:var(--bd);">
+          <div class="lft"><span class="sec-tag">A</span><span class="sec-title">LATEST CASE EVENT TIMELINE</span></div>
+          <span class="sec-meta">MOST RECENTLY SCREENED CASE</span>
+        </div>
+        <div class="audit-log" id="audit-page-log" style="max-height:420px;"><div class="dim">LOADING…</div></div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: REPORTS ============ -->
+    <section class="view" id="view-reports">
+      <div class="sec-head">
+        <div class="lft"><span class="sec-tag">05</span><span class="sec-title">REPORTS — OPERATIONS ANALYTICS</span></div>
+        <span class="sec-meta">DERIVED FROM REAL DB ROWS ONLY</span>
+      </div>
+      <div class="panel"><div class="hud-grid" id="reports-hud"></div></div>
+      <div class="cols-2">
+        <div class="panel">
+          <div class="sec-head" style="border:none;border-bottom:var(--bd);">
+            <div class="lft"><span class="sec-tag">A</span><span class="sec-title">RISK DISTRIBUTION</span></div>
+          </div>
+          <div id="reports-risk"></div>
+        </div>
+        <div class="panel">
+          <div class="sec-head" style="border:none;border-bottom:var(--bd);">
+            <div class="lft"><span class="sec-tag">B</span><span class="sec-title">STAGE LATENCY (AVG MS)</span></div>
+          </div>
+          <div id="reports-latency"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: SYSTEM ============ -->
+    <section class="view" id="view-system">
+      <div class="sec-head">
+        <div class="lft"><span class="sec-tag">06</span><span class="sec-title">SYSTEM — COMPONENT HEALTH</span></div>
+        <span class="sec-meta">LIVE BACKEND STATE</span>
+      </div>
+      <div class="panel"><div id="system-health"><div class="dim">LOADING…</div></div></div>
+    </section>
+
+    <!-- ============ VIEW: SETTINGS ============ -->
+    <section class="view" id="view-settings">
+      <div class="sec-head">
+        <div class="lft"><span class="sec-tag">07</span><span class="sec-title">SETTINGS — ROLE & SESSION</span></div>
+        <span class="sec-meta">DEV TOKEN AUTH (DEMO BUILD)</span>
+      </div>
+      <div class="panel">
+        <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:var(--bd);">
+          <div style="border-right:var(--bd);padding:12px;">
+            <label class="lbl" for="set-user">OPERATOR ID</label>
+            <input class="field-input" id="set-user" value="demo-officer" />
+          </div>
+          <div style="padding:12px;">
+            <label class="lbl" for="set-role">ROLE</label>
+            <select class="field-input" id="set-role">
+              <option value="officer">OFFICER</option>
+              <option value="admin">ADMIN</option>
+              <option value="auditor">AUDITOR</option>
+            </select>
+          </div>
+        </div>
+        <div style="padding:12px;display:flex;gap:8px;align-items:center;">
+          <button class="btn primary" id="btn-reauth">RE-MINT SESSION TOKEN</button>
+          <span class="dim" id="session-info" style="padding:0;"></span>
+        </div>
+        <div id="settings-rows"></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- confirm modal -->
+<div class="modal-back" id="modal-back">
+  <div class="modal">
+    <div class="m-head"><span id="modal-title">CONFIRM</span><span id="modal-x" class="clickable">✕</span></div>
+    <div class="m-body" id="modal-body">—</div>
+    <div class="m-actions">
+      <button class="btn" id="modal-cancel">ABORT</button>
+      <button class="btn primary" id="modal-ok">CONFIRM</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   IDENTITYSHIELD — forensic console. All data from /api/v1.
+   No stage state is ever invented: the UI renders what the
+   backend reports (success/failed/unavailable/skipped).
+   ============================================================ */
+const $ = (id) => document.getElementById(id);
+const API = '/api/v1';
+let TOKEN = null;
+let ROLE = localStorage.getItem('is_role') || 'officer';
+let USER = localStorage.getItem('is_user') || 'demo-officer';
+let currentCase = null;      // {id, ...}
+let pollTimer = null;
+/* -------- single-run screening state machine (IDLE→INGEST→…→COMPLETE) --------
+   One explicit user action starts exactly one run. The poller is bound to that
+   run_id + case_id, stops permanently on completed/failed, and every path that
+   could restart the pipeline is guarded. Renders never trigger API calls. */
+let activeCaseId = null;     // case the poller is bound to
+let activeRunId = null;      // run the poller is bound to (null = idle)
+let screenStartInFlight = false; // double-click / re-entrancy guard
+const POLL_INTERVAL_MS = 1500;
+const POLL_MAX_MS = 180000;      // hard stop after 3 min
+const POLL_MAX_ERRORS = 5;       // hard stop after 5 consecutive failures
+let pollErrors = 0;
+let lastRunCache = { caseId: null, runId: null, run: null }; // per-case result cache (rule 13)
+let auditFetchedForRun = null;   // audit fetched once per completed run, not per tick
+
+function stopPolling() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  activeRunId = null; activeCaseId = null; pollErrors = 0;
+  console.log('[SCREENING] PIPELINE STOPPED');
+}
+
+/* ---------------- primitives ---------------- */
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 2600);
+}
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+async function api(path, opts = {}) {
+  if (!TOKEN) await mintToken();
+  const r = await fetch(API + path, {
+    ...opts,
+    headers: { Authorization: `Bearer ${TOKEN}`, ...(opts.headers || {}) },
+  });
+  if (r.status === 401) { TOKEN = null; throw new Error('SESSION EXPIRED — RE-MINT TOKEN IN SETTINGS'); }
+  if (!r.ok) {
+    let detail = `HTTP ${r.status}`;
+    try { const j = await r.json(); if (j.detail) detail = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail); } catch {}
+    throw new Error(detail);
+  }
+  return r.json();
+}
+async function mintToken() {
+  const r = await fetch(`${API}/auth/dev-token`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: USER, role: ROLE }),
+  });
+  if (!r.ok) throw new Error(`AUTH FAILED (HTTP ${r.status})`);
+  TOKEN = (await r.json()).access_token;
+  $('tb-role').textContent = ROLE.toUpperCase();
+}
+
+/* confirm modal */
+let modalConfirm = null;
+function confirmBox(title, body, onOk) {
+  $('modal-title').textContent = title;
+  $('modal-body').textContent = body;
+  $('modal-back').classList.add('on');
+  modalConfirm = onOk;
+}
+$('modal-ok').onclick = () => { $('modal-back').classList.remove('on'); if (modalConfirm) modalConfirm(); };
+$('modal-cancel').onclick = () => $('modal-back').classList.remove('on');
+$('modal-x').onclick = () => $('modal-back').classList.remove('on');
+
+/* status mapping: backend stage status → forensic state */
+function mapStatus(status) {
+  switch ((status || '').toLowerCase()) {
+    case 'success': return 'pass';
+    case 'failed': return 'fail';
+    case 'unavailable': return 'unavail';
+    case 'skipped': return 'notrun';
+    case 'running': return 'running';
+    case 'queued': return 'notrun';
+    default: return 'notrun';
+  }
+}
+const STATE_LABEL = { pass:'PASSED', review:'REVIEW', fail:'FAILED', notrun:'NOT RUN', unavail:'UNAVAILABLE', running:'RUNNING' };
+
+/* ---------------- navigation ---------------- */
+const NAV = [
+  ['screening', '01', 'SCREENING'],
+  ['cases', '02', 'CASES'],
+  ['investigations', '03', 'INVESTIGATIONS'],
+  ['audit', '04', 'AUDIT LEDGER'],
+  ['reports', '05', 'REPORTS'],
+  ['system', '06', 'SYSTEM'],
+  ['settings', '07', 'SETTINGS'],
+];
+function buildNav() {
+  $('nav').innerHTML = NAV.map(([id, n, label]) =>
+    `<li><button class="nav-item" data-nav="${id}"><span class="idx">${n}</span> ${label}</button></li>`).join('');
+  document.querySelectorAll('[data-nav]').forEach(el =>
+    el.addEventListener('click', () => goto(el.dataset.nav)));
+}
+function goto(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+  $('view-' + view).classList.add('on');
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.nav === view));
+  if (view === 'cases') loadCases();
+  if (view === 'investigations') loadInvestigations();
+  if (view === 'audit') loadAuditPage();
+  if (view === 'reports') loadReports();
+  if (view === 'system') loadSystem();
+  if (view === 'settings') renderSettings();
+}
+
+/* ============================================================
+   SCREENING VIEW
+   ============================================================ */
+const STAGE_ORDER = [
+  ['preprocessing', 'PREPROCESSING'],
+  ['ocr', 'OCR EXTRACTION'],
+  ['tampering_detection', 'TAMPERING'],
+  ['liveness_detection', 'LIVENESS'],
+  ['face_verification', 'FACE VERIFICATION'],
+  ['deepfake_detection', 'DEEPFAKE'],
+  ['anomaly_detection', 'ANOMALY'],
+  ['risk_engine', 'RISK ENGINE'],
+  ['explanation', 'EXPLANATION'],
+];
+const HUMAN_REASON = {
+  no_live_capture: 'LIVE CAPTURE NOT PROVIDED',
+  no_run_data: 'AWAITING EXECUTION',
+};
+function humanReason(sr) {
+  const r = sr.result || {};
+  /* stage-specific, officer-readable summaries (from backend evidence only) */
+  if (sr.stage === 'ocr' && sr.status === 'success') {
+    const eng = (r.engine || 'unknown').toUpperCase();
+    const conf = r.confidence != null ? ' · CONF ' + Number(r.confidence).toFixed(0) + '%' : '';
+    return `ENGINE ${eng}${conf}`;
+  }
+  if (sr.stage === 'tampering_detection' && sr.status === 'success') {
+    const n = (r.regions || []).length;
+    return r.tampered ? `TAMPERING SIGNALS DETECTED — ${n} REGION(S)` : 'NO TAMPERING SIGNAL DETECTED';
+  }
+  if (sr.stage === 'liveness_detection' && sr.status === 'success') {
+    return r.is_live ? 'LIVE SUBJECT ACCEPTED' : 'LIVENESS CHECK FAILED';
+  }
+  if (sr.stage === 'face_verification' && sr.status === 'success') {
+    if (r.face_detected === false) return 'NO FACE DETECTED IN CAPTURES';
+    const sim = r.similarity != null ? ' · SIMILARITY ' + (r.similarity * 100).toFixed(1) + '%' : '';
+    if (r.uncertainty && r.uncertainty !== 'none') return 'BIOMETRIC EVIDENCE UNCERTAIN' + sim;
+    return (r.match ? 'FACE MATCH CONFIRMED' : 'FACE MISMATCH DETECTED') + sim;
+  }
+  if (sr.stage === 'deepfake_detection' && sr.status === 'success') {
+    const sc = r.score != null ? ' · SCORE ' + (typeof r.score === 'number' ? r.score.toFixed(2) : r.score) : '';
+    return (r.verdict ? 'VERDICT: ' + r.verdict.toUpperCase() : 'ANALYSIS COMPLETE') + sc;
+  }
+  if (sr.stage === 'anomaly_detection' && sr.status === 'success') {
+    const n = (r.anomalies || []).length;
+    return n ? `${n} CROSS-CASE LINK(S) DETECTED` : 'NO CROSS-CASE LINKS FOUND';
+  }
+  if (sr.stage === 'preprocessing' && sr.status === 'success') {
+    const q = r.quality || {};
+    return `QUALITY ${String(q.quality_status || 'ASSESED').toUpperCase()}${q.blur_score != null ? ' · BLUR ' + (typeof q.blur_score === 'number' ? q.blur_score.toFixed(0) : q.blur_score) : ''}`;
+  }
+  if (sr.stage === 'risk_engine' && sr.status === 'success') {
+    return `SCORE ${r.risk_score}/100 · ${String(r.decision_status || '').replace(/_/g, ' ')}`;
+  }
+  if (sr.stage === 'explanation' && sr.status === 'success') {
+    return 'OFFICER SUMMARY GENERATED';
+  }
+  const raw = r.reason || r.error || (r.metadata && r.metadata.reason) || '';
+  if (typeof raw === 'string' && raw) {
+    const up = raw.toUpperCase();
+    if (up.includes('LIVE CAPTURE')) return 'LIVE CAPTURE NOT PROVIDED';
+    if (up.includes('NOT PROVIDED')) return 'INPUT NOT PROVIDED';
+    return up.length > 90 ? up.slice(0, 90) + '…' : up;
+  }
+  if (sr.status === 'skipped') return HUMAN_REASON.no_live_capture;
+  if (sr.status === 'unavailable') return 'MODEL / SERVICE UNAVAILABLE';
+  if (sr.status === 'success') return 'STAGE EXECUTED — EVIDENCE RECORDED';
+  return '';
+}
+
+function stageConfidence(sr) {
+  const r = sr.result || {};
+  const c = r.confidence ?? r.similarity ?? r.ocr_confidence;
+  if (typeof c === 'number' && isFinite(c)) {
+    const pct = c <= 1 ? c * 100 : c;
+    return pct.toFixed(0) + '%';
+  }
+  if (sr.stage === 'risk_engine' && typeof r.confidence_score === 'number') return r.confidence_score + '%';
+  return '—';
+}
+
+function renderLedger(stageResults, runStatus) {
+  const led = $('ledger');
+  $('ledger-empty').style.display = stageResults.length ? 'none' : 'block';
+  const byStage = Object.fromEntries((stageResults || []).map(sr => [sr.stage, sr]));
+  led.innerHTML = STAGE_ORDER.map(([stage, name], i) => {
+    const sr = byStage[stage];
+    const num = String(i + 1).padStart(2, '0');
+    if (!sr) {
+      const st = runStatus === 'running' ? 'running' : 'notrun';
+      return `<div class="led-row">
+        <div class="led-num">${num} /</div>
+        <div class="led-rail"><div class="led-sq ${st}"></div></div>
+        <div class="led-body"><div class="led-name">${name}</div><div class="led-rule"></div><div class="led-reason">${runStatus === 'running' ? 'QUEUED FOR EXECUTION' : HUMAN_REASON.no_run_data}</div></div>
+        <div class="led-right"><div class="led-status ${st}">${st === 'running' ? 'RUNNING' : 'NOT RUN'}</div></div>
+      </div>`;
+    }
+    const state = mapStatus(sr.status);
+    const label = STATE_LABEL[state];
+    const reason = humanReason(sr);
+    const ms = sr.processing_time_ms;
+    return `<div class="led-row tick">
+      <div class="led-num">${num} /</div>
+      <div class="led-rail"><div class="led-sq ${state}"></div></div>
+      <div class="led-body"><div class="led-name">${name}</div><div class="led-rule"></div><div class="led-reason">${esc(reason)}</div></div>
+      <div class="led-right">
+        <div class="led-status ${state}">${label}</div>
+        <div class="led-ms">${ms != null ? String(ms) + 'ms' : '—'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* verification matrix — decisive checks only */
+const MATRIX_KEYS = [
+  ['ocr', 'OCR'],
+  ['tampering_detection', 'TAMPERING'],
+  ['face_verification', 'FACE'],
+  ['liveness_detection', 'LIVENESS'],
+  ['deepfake_detection', 'DEEPFAKE'],
+  ['anomaly_detection', 'ANOMALY'],
+];
+function renderMatrix(stageResults) {
+  const byStage = Object.fromEntries((stageResults || []).map(sr => [sr.stage, sr]));
+  let executed = 0;
+  const rows = MATRIX_KEYS.map(([stage, name]) => {
+    const sr = byStage[stage];
+    if (!sr) return `<tr><td class="m-name">${name}</td><td><span class="st st-notrun"><span class="sq"></span> — NOT RUN</span></td><td>—</td></tr>`;
+    const state = mapStatus(sr.status);
+    if (state === 'pass') executed++;
+    const sym = { pass: '✓', fail: '✕', review: '!', unavail: '∅', notrun: '—', running: '…' }[state];
+    const word = STATE_LABEL[state];
+    return `<tr><td class="m-name">${name}</td>
+      <td><span class="st st-${state}"><span class="sq"></span> ${sym} ${word}</span></td>
+      <td>${stageConfidence(sr)}</td></tr>`;
+  }).join('');
+  $('matrix-body').innerHTML = rows;
+  $('cov-num').textContent = `${executed} / ${MATRIX_KEYS.length}`;
+  $('cov-cells').innerHTML = Array.from({ length: MATRIX_KEYS.length }, (_, i) =>
+    `<div class="cov-cell${i < executed ? ' on' : ''}"></div>`).join('');
+}
+
+/* verdict */
+function renderVerdict(risk) {
+  const P = $('verdict-panel');
+  if (!risk) { P.style.display = 'none'; return; }
+  P.style.display = 'block';
+  const score = risk.risk_score ?? 0;
+  const level = (risk.risk_level || '—').toUpperCase();
+  const decision = (risk.decision_status || '').toUpperCase();
+  $('v-risk').innerHTML = `${String(score).padStart(2, '0')}<small> /100</small>`;
+  $('v-band').textContent = `BAND: ${level}`;
+  $('v-conf').innerHTML = `${risk.confidence_score ?? '—'}<small> %</small>`;
+  const verif = risk.verification || {};
+  $('v-verif').innerHTML = `${verif.executed_count ?? '—'}<small> /${verif.total ?? 6}</small>`;
+  const dEl = $('v-decision');
+  dEl.textContent = decision.replace('_', ' ') || '—';
+  dEl.className = 'v-decision ' + (decision.startsWith('REJECT') ? 'reject' : decision.startsWith('VERIFY') ? 'verify' : 'review');
+  $('v-decision-sub').textContent = decision === 'REVIEW_REQUIRED'
+    ? 'EVIDENCE GAPS OUTRANK QUIET SCORE' : decision === 'REJECT' ? 'FRAUD SIGNAL ABOVE THRESHOLD'
+    : decision === 'VERIFY' ? 'ALL DECISIVE CHECKS PASSED' : '—';
+
+  /* the critical distinction: fraud evidence vs verification coverage.
+     Cross-case links are relational intelligence, not per-case fraud proof —
+     only tampering / face / liveness / deepfake / validation raise the banner. */
+  const FRAUD_EVIDENCE_KEYS = ['tampering', 'face_mismatch', 'liveness', 'deepfake', 'document_validation'];
+  const hardFraud = (risk.contribution_details || []).some(d =>
+    FRAUD_EVIDENCE_KEYS.includes(d.signal) && (d.contribution || 0) > 0);
+  const fraudStrong = score >= 50 || hardFraud;
+  $('distinct-fraud-txt').textContent = fraudStrong
+    ? 'FRAUD SIGNAL: ELEVATED — REVIEW EVIDENCE BELOW'
+    : 'FRAUD SIGNAL: LOW — NO STRONG FRAUD EVIDENCE';
+  const incomplete = (verif.pending || []).length > 0 || (risk.missing_mandatory_fields || []).length > 0;
+  $('distinct-incomplete-txt').textContent = incomplete
+    ? 'IDENTITY VERIFICATION INCOMPLETE — DECISION NOT AUTOMATIC'
+    : 'IDENTITY VERIFICATION COVERAGE COMPLETE';
+
+  /* factors vs gaps — human-readable only (backend rows carry .text) */
+  const factorText = (s) => ({
+    no_tampering_signal: 'NO TAMPERING SIGNAL',
+    tampering_detected: 'TAMPERING SIGNALS DETECTED',
+    no_anomaly_signal: 'NO SIGNIFICANT ANOMALY',
+    cross_case_anomaly: 'CROSS-CASE LINKS DETECTED',
+    validation_pass: 'DOCUMENT STRUCTURE CONSISTENT',
+    face_match: 'FACE MATCH CONFIRMED',
+    face_mismatch: 'FACE MISMATCH BETWEEN DOCUMENT AND CAPTURE',
+    live_capture_accepted: 'LIVE CAPTURE VERIFIED',
+    liveness_failed: 'SUBJECT FAILED LIVENESS CHECK',
+    ocr_confidence_acceptable: 'OCR CONFIDENCE ACCEPTABLE',
+    low_ocr_confidence: 'LOW OCR CONFIDENCE',
+    deepfake_score_negligible: 'NO SYNTHETIC-MEDIA SIGNAL',
+    deepfake_score_weighted: 'SYNTHETIC-MEDIA INDICATORS PRESENT',
+  }[(s.reason || '')] || String(s.text || s.officer_reason || s.reason || 'SIGNAL RECORDED').toUpperCase());
+  $('risk-factors').innerHTML = (risk.risk_factors || []).map(f =>
+    `<div class="fct-row"><span class="plus">+</span><span>${esc(factorText(f))}</span></div>`).join('')
+    || '<div class="fct-row"><span class="plus">+</span><span>NO RISK FACTORS RECORDED</span></div>';
+  $('verif-gaps').innerHTML = (risk.verification_gaps || []).map(g =>
+    `<div class="fct-row"><span class="bang">!</span><span>${esc((g.text || '').toUpperCase())}</span></div>`).join('')
+    || '<div class="fct-row"><span class="bang">!</span><span>NO VERIFICATION GAPS</span></div>';
+
+  /* why review */
+  const why = [];
+  (risk.missing_mandatory_fields || []).forEach(f => {
+    if (f === 'full_name') why.push(['FULL NAME VALIDATION INCOMPLETE', 'MED', 'OCR / DOCUMENT VALIDATION']);
+    if (f === 'date_of_birth') why.push(['DATE OF BIRTH VALIDATION INCOMPLETE', 'MED', 'OCR / DOCUMENT VALIDATION']);
+    if (f === 'date_of_expiry') why.push(['EXPIRY VALIDATION INCOMPLETE', 'MED', 'OCR / DOCUMENT VALIDATION']);
+  });
+  const gapMap = {
+    face_verification: 'FACE VERIFICATION NOT RUN',
+    face_mismatch: 'FACE VERIFICATION NOT RUN',
+    liveness: 'LIVENESS NOT RUN',
+    deepfake: 'DEEPFAKE ANALYSIS NOT RUN',
+    tampering: 'TAMPERING ANALYSIS NOT RUN',
+    ocr_confidence: 'OCR CONFIDENCE UNAVAILABLE',
+    document_validation: 'DOCUMENT VALIDATION NOT RUN',
+  };
+  (verif.pending || []).forEach(k => why.push([gapMap[k] || k.replace(/_/g, ' ').toUpperCase() + ' NOT RUN', 'HIGH', 'PIPELINE']));
+  if (decision === 'REVIEW_REQUIRED' && why.length === 0) why.push(['EVIDENCE INSUFFICIENT FOR AUTOMATIC DECISION', 'HIGH', 'RISK ENGINE']);
+  $('why-rows').innerHTML = why.map(([txt, sev, src], i) =>
+    `<div class="why-row"><span class="why-num">${String(i + 1).padStart(2, '0')}</span><span class="why-txt">${esc(txt)}</span><span class="why-sev ${sev.toLowerCase() === 'high' ? 'high' : 'med'}">${sev}</span><span class="why-src">${esc(src)}</span></div>`).join('');
+  $('why-panel').style.display = why.length ? 'block' : 'none';
+}
+
+/* document forensics rows */
+function renderForensics(caseData, stageResults) {
+  const P = $('forensics-panel');
+  if (!caseData) { P.style.display = 'none'; return; }
+  P.style.display = 'block';
+  const byStage = Object.fromEntries((stageResults || []).map(sr => [sr.stage, sr]));
+  const doc = (caseData.files || []).find(f => f.file_type === 'document');
+  const ocr = (byStage.ocr?.result) || {};
+  const pre = (byStage.preprocessing?.result) || {};
+  const q = pre.quality || {};
+  const tam = (byStage.tampering_detection?.result) || {};
+  const val = ocr.validation || {};
+  const rows = [
+    ['FILE', doc ? doc.filename : '—'],
+    ['FILE HASH', doc ? `SHA-256 ${String(doc.content_hash).slice(0, 24)}…` : '—'],
+    ['DOCUMENT TYPE', (val.document_type || 'UNCLASSIFIED').toUpperCase()],
+    ['OCR CONFIDENCE', ocr.confidence != null ? Number(ocr.confidence).toFixed(0) + '%' : '—'],
+    ['METADATA RISK', tam.metadata?.risk_level ? String(tam.metadata.risk_level).toUpperCase() : (tam.metadata?.status ? String(tam.metadata.status).toUpperCase() : '—')],
+    ['IMAGE QUALITY', q.quality_status ? String(q.quality_status).toUpperCase() + ` (BLUR ${typeof q.blur_score === 'number' ? q.blur_score.toFixed(0) : '—'})` : '—'],
+    ['VALIDATION VERDICT', (val.summary?.verdict || '—').toUpperCase()],
+    ['RULES APPLIED', val.summary?.rules_applied != null ? String(val.summary.rules_applied) : '—'],
+    ['VIOLATIONS', val.summary?.violations != null ? String(val.summary.violations) : '—'],
+    ['QR / BARCODE STATUS', 'NOT ASSESSED IN THIS BUILD'],
+  ];
+  $('forensics-rows').innerHTML = rows.map(([k, v]) =>
+    `<div class="trow"><span class="k">${k}</span><span class="v ${k === 'FILE' || k === 'DOCUMENT TYPE' ? 'strong' : ''}">${esc(v)}</span></div>`).join('');
+}
+
+/* audit trail */
+let lastAuditEvents = [];
+function renderAudit(events) {
+  lastAuditEvents = events || [];
+  const el = $('audit-log');
+  el.innerHTML = (events || []).map(ev => {
+    const t = ev.timestamp ? new Date(ev.timestamp).toTimeString().slice(0, 8) : '--:--:--';
+    return `<div class="al-row"><span>${t}</span>  <span class="al-type">${esc(ev.event_type)}</span>${ev.actor_id ? `  <span class="al-hash">ACTOR=${esc(ev.actor_id)}</span>` : ''}  <span class="al-hash">HASH=${esc(String(ev.current_hash || '').slice(0, 16))}…</span></div>`;
+  }).join('') || '<div class="dim">NO EVENTS</div>';
+}
+$('btn-copy-log').onclick = () => {
+  navigator.clipboard.writeText($('audit-log').innerText).then(() => toast('AUDIT LOG COPIED'));
+};
+$('btn-verify-chain').onclick = async () => {
+  if (!currentCase) return;
+  try {
+    const d = await api(`/cases/${currentCase.id}/audit/verify`);
+    toast(d.valid ? 'CHAIN VERIFIED — INTEGRITY INTACT' : 'CHAIN BROKEN — TAMPERING DETECTED');
+  } catch (e) { toast(e.message); }
+};
+
+/* screening polling — bound to ONE case_id + run_id, bounded, self-terminating.
+   Stops permanently when: status is completed/failed, 3-minute deadline hits,
+   5 consecutive poll errors occur, or a different case is opened. */
+function startPolling(caseId, runId) {
+  stopPolling();
+  if (!runId) return;
+  activeCaseId = caseId; activeRunId = runId; pollErrors = 0;
+  const startedAt = Date.now();
+  console.log(`[SCREENING] POLL START run=${runId} case=${caseId}`);
+  pollTimer = setInterval(async () => {
+    if (activeRunId !== runId || activeCaseId !== caseId) return; // stale tick — a newer run owns the poller
+    if (Date.now() - startedAt > POLL_MAX_MS) {
+      toast('POLL DEADLINE REACHED — RESULT STAYS AS SHOWN');
+      stopPolling();
+      return;
+    }
+    try {
+      const run = await api(`/cases/${caseId}/screening`);
+      pollErrors = 0;
+      if (!activeRunId) return; // stopped while the request was in flight
+      if (run.id !== runId) return; // backend answered with a different run — ignore
+      if (run.status === 'queued' || run.status === 'running') {
+        $('ledger-meta').textContent = `RUN ${run.id.slice(0, 8).toUpperCase()} · ${run.status.toUpperCase()}`;
+        renderLedger(run.stage_results, run.status);
+        renderMatrix(run.stage_results);
+        return;
+      }
+      /* terminal state — polling ends HERE, permanently (rule 9) */
+      stopPolling();
+      applyRun(run);
+      toast(`RUN COMPLETE — ${run.status.toUpperCase()}`);
+      loadEngine();
+    } catch (e) {
+      pollErrors += 1;
+      if (pollErrors >= POLL_MAX_ERRORS) {
+        stopPolling();
+        toast('POLL ABANDONED AFTER REPEATED ERRORS — ' + e.message);
+      }
+    }
+  }, POLL_INTERVAL_MS);
+}
+
+function applyRun(run) {
+  /* idempotent render (rule 18): a terminal run is rendered at most once per
+     run_id — the poller and openCaseInConsole can both call this safely. */
+  if (!run) return;
+  const isTerminal = run.status !== 'queued' && run.status !== 'running';
+  if (isTerminal && lastRunCache.caseId === currentCase?.id && lastRunCache.runId === run.id && lastRunCache.rendered) return;
+  $('ledger-meta').textContent = `RUN ${run.id.slice(0, 8).toUpperCase()} · ${run.status.toUpperCase()}`;
+  renderLedger(run.stage_results, run.status);
+  renderMatrix(run.stage_results);
+  const riskSr = (run.stage_results || []).find(sr => sr.stage === 'risk_engine');
+  renderVerdict(riskSr?.result || null);
+  renderForensics(currentCase, run.stage_results);
+  $('decision-panel').style.display = 'block';
+  $('audit-panel').style.display = 'block';
+  /* audit fetched ONCE per completed run — not on every render/poll tick */
+  if (isTerminal && auditFetchedForRun !== run.id) {
+    auditFetchedForRun = run.id;
+    api(`/cases/${currentCase.id}/audit`).then(renderAudit).catch(() => {});
+  }
+  if (isTerminal) {
+    lastRunCache = { caseId: currentCase?.id, runId: run.id, run, rendered: true };
+    console.log(`[SCREENING] PIPELINE COMPLETE run=${run.id} status=${run.status}`);
+  }
+}
+
+/* case intake */
+let caseToken = null;
+$('btn-newcase').onclick = async () => {
+  const name = $('subject-name').value.trim();
+  try {
+    const data = await api('/cases', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ subject_name: name || null }) });
+    currentCase = data;
+    caseToken = TOKEN;
+    $('bio-file').textContent = '—'; $('bio-hash').textContent = '—';
+    $('bio-selfie').style.display = 'none';
+    $('bio-rescreen').style.display = 'none';
+    bioSetStatus('NO CAPTURE — STAGES 04–06 WILL NOT RUN');
+    $('hud-case').textContent = data.id.slice(0, 12).toUpperCase() + '…';
+    $('drop-case-hint').textContent = `CASE ${data.id.slice(0, 8).toUpperCase()} OPEN — DROP DOCUMENT TO INGEST`;
+    toast('CASE OPENED ' + data.id.slice(0, 8).toUpperCase());
+  } catch (e) { toast(e.message); }
+};
+
+const drop = $('drop');
+drop.addEventListener('click', () => $('doc-input').click());
+['dragenter', 'dragover'].forEach(n => drop.addEventListener(n, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(n => drop.addEventListener(n, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => { if (e.dataTransfer.files.length) ingestFile(e.dataTransfer.files[0]); });
+$('doc-input').addEventListener('change', () => { if ($('doc-input').files.length) ingestFile($('doc-input').files[0]); });
+
+async function ingestFile(file) {
+  if (!currentCase) { toast('OPEN A CASE FIRST'); return; }
+  try {
+    const fd = new FormData(); fd.append('upload', file);
+    const up = await api(`/cases/${currentCase.id}/files?file_type=document`, { method: 'POST', body: fd });
+    currentCase.files = [...(currentCase.files || []), up];
+    /* preview */
+    const url = URL.createObjectURL(file);
+    const img = $('preview-img');
+    if (file.type === 'application/pdf') { img.removeAttribute('src'); $('drop-main').textContent = 'PDF INGESTED — RASTERIZED AT SCREEN TIME'; }
+    else { img.src = url; }
+    $('preview-wrap').classList.add('on');
+    $('demo-tag').style.display = /generated|synthetic|demo|sample/i.test(file.name) ? 'inline-block' : 'none';
+    const meta = [
+      ['FILE', up.filename], ['SIZE', (up.size_bytes / 1024).toFixed(1) + ' KB'],
+      ['TYPE', up.mime_type || file.type || '—'], ['HASH', String(up.content_hash).slice(0, 32) + '…'],
+      ['UPLOADED', up.uploaded_at ? new Date(up.uploaded_at).toLocaleString() : '—'], ['CASE ID', currentCase.id],
+    ];
+    $('intake-meta').innerHTML = meta.map(([k, v]) => `<div class="trow"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join('');
+    toast('DOCUMENT INGESTED — HASH SEALED');
+    screenCase('document-ingest');
+  } catch (e) { toast('INTAKE REJECTED: ' + e.message); }
+}
+
+/* The ONLY entry points to a new run: document ingest, biometric capture,
+   and the explicit RE-SCREEN button — each funnels through here with a
+   reason. Renders, navigation, tab switches and polls can never reach it. */
+async function screenCase(reason = 'explicit') {
+  if (!currentCase) return;
+  if (screenStartInFlight) { console.log('[SCREENING] DUPLICATE RUN BLOCKED (request already in flight)'); return; }
+  if (activeRunId) { console.log(`[SCREENING] DUPLICATE RUN BLOCKED (run ${activeRunId} active)`); toast('SCREENING ALREADY RUNNING FOR THIS CASE'); return; }
+  screenStartInFlight = true;
+  console.log(`[SCREENING] RUN START case=${currentCase.id} reason=${reason}`);
+  try {
+    $('ledger-empty').style.display = 'none';
+    $('ledger-meta').textContent = 'RUN ENQUEUED';
+    const run = await api(`/cases/${currentCase.id}/screen`, { method: 'POST' });
+    if (!run || !run.id) throw new Error('malformed run response');
+    startPolling(currentCase.id, run.id);
+    toast(`SCREENING ENQUEUED — RUN ${run.id.slice(0, 8).toUpperCase()}`);
+  } catch (e) {
+    $('ledger-meta').textContent = 'RUN REJECTED';
+    toast('SCREEN REJECTED: ' + e.message);
+    console.log('[SCREENING] RUN START FAILED — ' + e.message);
+  } finally {
+    screenStartInFlight = false;
+  }
+}
+
+/* ============================================================
+   BIOMETRIC INTAKE — live capture feeding liveness / face / deepfake
+   ============================================================ */
+let bioStream = null;
+const bioVid = $('bio-video'), bioCanvas = $('bio-canvas');
+function bioSetStatus(msg, color) {
+  const el = $('bio-status');
+  el.textContent = msg;
+  el.style.color = color ? `var(--${color})` : '';
+}
+function stopBioCam() {
+  if (bioStream) { bioStream.getTracks().forEach(t => t.stop()); bioStream = null; }
+  bioVid.style.display = 'none';
+  $('bio-cam-off').style.display = 'flex';
+  $('bio-capture').disabled = true;
+  $('bio-start').innerHTML = '◉ START CAMERA';
+}
+$('bio-start').onclick = async () => {
+  if (bioStream) { stopBioCam(); bioSetStatus('CAMERA STOPPED'); return; }
+  try {
+    bioStream = await navigator.mediaDevices.getUserMedia({ video: { width: 720, height: 720, facingMode: 'user' }, audio: false });
+    bioVid.srcObject = bioStream;
+    bioVid.style.display = 'block';
+    $('bio-cam-off').style.display = 'none';
+    $('bio-capture').disabled = false;
+    $('bio-start').innerHTML = '<span class="bio-live"></span> STOP CAMERA';
+    bioSetStatus('CAMERA LIVE — FRAME THE FACE, THEN CAPTURE', 'green');
+  } catch (e) {
+    bioSetStatus('CAMERA UNAVAILABLE — ' + e.message + ' · USE UPLOAD PHOTO', 'red');
+  }
+};
+$('bio-capture').onclick = () => {
+  if (!bioStream || !bioVid.videoWidth) return;
+  bioCanvas.width = bioVid.videoWidth; bioCanvas.height = bioVid.videoHeight;
+  bioCanvas.getContext('2d').drawImage(bioVid, 0, 0);
+  bioCanvas.toBlob(blob => {
+    if (blob) uploadSelfie(new File([blob], `live_capture_${Date.now()}.jpg`, { type: 'image/jpeg' }));
+  }, 'image/jpeg', 0.95);
+};
+$('bio-upload-btn').onclick = () => $('bio-input').click();
+$('bio-input').addEventListener('change', () => { if ($('bio-input').files.length) { uploadSelfie($('bio-input').files[0]); $('bio-input').value = ''; } });
+$('bio-rescreen').onclick = () => screenCase('explicit-rescreen');
+async function uploadSelfie(file) {
+  if (!currentCase) { toast('OPEN A CASE FIRST'); return; }
+  bioSetStatus('INGESTING LIVE CAPTURE…', 'orange');
+  try {
+    const fd = new FormData(); fd.append('upload', file);
+    const up = await api(`/cases/${currentCase.id}/files?file_type=live_capture`, { method: 'POST', body: fd });
+    currentCase.files = [...(currentCase.files || []), up];
+    $('bio-selfie').src = URL.createObjectURL(file);
+    $('bio-selfie').style.display = 'block';
+    $('bio-file').textContent = up.filename;
+    $('bio-hash').textContent = String(up.content_hash).slice(0, 32) + '…';
+    $('bio-rescreen').style.display = 'inline-block';
+    stopBioCam();
+    toast('LIVE CAPTURE INGESTED — HASH SEALED');
+    if ((currentCase.files || []).some(f => f.file_type === 'document')) {
+      bioSetStatus('CAPTURE SEALED — RE-SCREENING WITH STAGES 04–06 ENABLED', 'green');
+      screenCase('biometric-capture');
+    } else {
+      bioSetStatus('CAPTURE SEALED — INGEST A DOCUMENT TO TRIGGER SCREENING', 'orange');
+    }
+  } catch (e) {
+    bioSetStatus('INTAKE REJECTED: ' + e.message, 'red');
+    toast('INTAKE REJECTED: ' + e.message);
+  }
+}
+
+/* officer decision */
+document.querySelectorAll('.dec-btn').forEach(b => b.addEventListener('click', () => {
+  if (!currentCase) { toast('NO CASE OPEN'); return; }
+  const act = b.dataset.act;
+  const label = { verify: 'VERIFY — IDENTITY CONFIRMED', review: 'REVIEW — ESCALATE', reject: 'REJECT — FRAUD DETECTED' }[act];
+  confirmBox('CONFIRM OFFICER DECISION', `${label}\nCASE ${currentCase.id}\nThis decision is sealed into the audit hash chain and cannot be altered.`, async () => {
+    try {
+      const note = $('decision-note').value.trim();
+      const d = await api(`/cases/${currentCase.id}/decision`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: act, note }),
+      });
+      $('decision-recorded').style.display = 'flex';
+      $('decision-recorded-v').textContent = `${d.status} · HASH ${String(d.hash).slice(0, 16)}…`;
+      toast('DECISION SEALED INTO LEDGER');
+      api(`/cases/${currentCase.id}/audit`).then(renderAudit).catch(() => {});
+    } catch (e) { toast(e.message); }
+  });
+}));
+
+/* ============================================================
+   CASES VIEW
+   ============================================================ */
+let allCases = [];
+async function loadCases() {
+  try {
+    allCases = await api('/cases');
+    renderCases();
+  } catch (e) { toast(e.message); }
+}
+function renderCases() {
+  const q = ($('case-filter-name').value || '').toLowerCase();
+  const riskF = ($('case-filter-risk').value || '').toLowerCase();
+  const rows = allCases.filter(c => {
+    const id = (c.id || '').toLowerCase(), name = (c.subject_name || '').toLowerCase();
+    if (q && !id.includes(q) && !name.includes(q)) return false;
+    if (riskF && (c.risk_level || 'not screened').toLowerCase() !== riskF) return false;
+    return true;
+  });
+  $('cases-count').textContent = allCases.length;
+  $('cases-empty').style.display = rows.length ? 'none' : 'block';
+  $('cases-body').innerHTML = rows.slice(0, 200).map(c => {
+    const risk = (c.risk_level || 'NOT SCREENED').toUpperCase();
+    const cls = risk === 'HIGH' ? 'st-fail' : risk === 'MEDIUM' ? 'st-review'
+      : risk === 'LOW' ? 'st-pass' : risk === 'REVIEW_REQUIRED' ? 'st-review' : 'st-notrun';
+    return `<tr class="clickable" data-case="${c.id}">
+      <td>${c.id.slice(0, 8)}…</td>
+      <td class="c-name">${esc(c.subject_name || '—')}</td>
+      <td>${esc((c.status || '').toUpperCase())}</td>
+      <td><span class="st ${cls}"><span class="sq"></span> ${esc(risk)}</span></td>
+      <td>${(c.files || []).length}</td>
+      <td>${c.created_at ? new Date(c.created_at).toISOString().slice(0, 16).replace('T', ' ') : '—'}</td>
+      <td><button class="btn sm" data-open="${c.id}">OPEN →</button></td>
+    </tr>`;
+  }).join('');
+  $('cases-body').querySelectorAll('[data-open]').forEach(b =>
+    b.addEventListener('click', e => { e.stopPropagation(); openCaseInConsole(b.dataset.open); }));
+  $('cases-body').querySelectorAll('tr[data-case]').forEach(tr =>
+    tr.addEventListener('click', () => openCaseInConsole(tr.dataset.case)));
+}
+
+async function openCaseInConsole(caseId) {
+  goto('screening');
+  stopPolling();                 /* opening a case NEVER restarts a run (rule 14) */
+  auditFetchedForRun = null;
+  lastRunCache = { caseId: null, runId: null, run: null }; /* fresh render for the reopened case */
+  try {
+    currentCase = await api(`/cases/${caseId}`);
+    $('hud-case').textContent = currentCase.id.slice(0, 12).toUpperCase() + '…';
+    $('drop-case-hint').textContent = `CASE ${currentCase.id.slice(0, 8).toUpperCase()} LOADED`;
+    const name = $('subject-name'); name.value = currentCase.subject_name || '';
+    /* show existing document */
+    const doc = (currentCase.files || []).find(f => f.file_type === 'document');
+    if (doc) {
+      try {
+        const r = await fetch(`${API}/cases/${caseId}/files/${doc.file_id}/content`, { headers: { Authorization: `Bearer ${TOKEN}` } });
+        if (r.ok && doc.mime_type !== 'application/pdf') {
+          $('preview-img').src = URL.createObjectURL(await r.blob());
+          $('preview-wrap').classList.add('on');
+        }
+      } catch {}
+    }
+    const liveFile = (currentCase.files || []).filter(f => f.file_type === 'live_capture').pop();
+    if (liveFile) {
+      $('bio-file').textContent = liveFile.filename;
+      $('bio-hash').textContent = String(liveFile.content_hash).slice(0, 32) + '…';
+      $('bio-rescreen').style.display = 'inline-block';
+      bioSetStatus('LIVE CAPTURE ON FILE — STAGES 04–06 ENABLED', 'green');
+      try {
+        const lr = await fetch(`${API}/cases/${caseId}/files/${liveFile.file_id}/content`, { headers: { Authorization: `Bearer ${TOKEN}` } });
+        if (lr.ok) { $('bio-selfie').src = URL.createObjectURL(await lr.blob()); $('bio-selfie').style.display = 'block'; }
+      } catch {}
+    } else {
+      bioSetStatus('NO CAPTURE — STAGES 04–06 WILL NOT RUN');
+    }
+    const run = await api(`/cases/${caseId}/screening`).catch(() => null);
+    if (run) {
+      if (run.status === 'queued' || run.status === 'running') {
+        /* A run is already executing server-side (e.g. another tab started it).
+           Attach to THAT run — do not start a new one. */
+        console.log(`[SCREENING] ATTACHING TO ACTIVE RUN ${run.id}`);
+        startPolling(caseId, run.id);
+      }
+      applyRun(run);           /* completed runs render from cache-free fetch once */
+    } else {
+      renderLedger([], 'idle'); renderMatrix([]);
+      $('verdict-panel').style.display = 'none'; $('decision-panel').style.display = 'none';
+      $('audit-panel').style.display = 'none';
+    }
+  } catch (e) { toast(e.message); }
+}
+
+/* ============================================================
+   INVESTIGATIONS / AUDIT / REPORTS / SYSTEM
+   ============================================================ */
+async function loadInvestigations() {
+  try {
+    const g = await api('/intelligence/fraud-graph');
+    const nodes = g.nodes || [], edges = g.edges || [];
+    const reuse = edges.filter(e => e.relation === 'REUSED_ID');
+    $('fraud-graph').innerHTML = `
+      <div class="trow"><span class="k">NODES</span><span class="v">${nodes.length}</span></div>
+      <div class="trow"><span class="k">EDGES</span><span class="v">${edges.length}</span></div>
+      <div class="trow"><span class="k">REUSED-ID SIGNALS</span><span class="v strong" style="color:${reuse.length ? 'var(--red)' : 'inherit'}">${reuse.length}</span></div>
+      ${reuse.slice(0, 12).map(e => `<div class="fct-row"><span class="bang">!</span><span>${esc(e.source.toUpperCase())} ↔ ${esc(e.target.toUpperCase())} — ${esc((e.signal || '').toUpperCase())}</span></div>`).join('')}`;
+    const acts = await api('/intelligence/activity?limit=30');
+    $('activity-log').innerHTML = acts.map(a => {
+      const t = a.timestamp ? new Date(a.timestamp).toTimeString().slice(0, 8) : '--:--:--';
+      return `<div class="al-row"><span>${t}</span>  <span class="al-type">${esc(a.action)}</span>  <span class="al-hash">${esc((a.case_id || '').slice(0, 8))}</span></div>`;
+    }).join('') || '<div class="dim">NO EVENTS</div>';
+  } catch (e) { $('fraud-graph').innerHTML = `<div class="dim">${esc(e.message)}</div>`; }
+}
+
+async function loadAuditPage() {
+  try {
+    const cases = await api('/cases');
+    const recent = cases[0];
+    $('audit-hud').innerHTML = `
+      <div class="hud-cell"><div class="hud-k">LEDGER</div><div class="hud-v">LOCAL HASH CHAIN</div></div>
+      <div class="hud-cell"><div class="hud-k">ALGORITHM</div><div class="hud-v">SHA-256</div></div>
+      <div class="hud-cell"><div class="hud-k">CASES ON RECORD</div><div class="hud-v">${cases.length}</div></div>
+      <div class="hud-cell"><div class="hud-k">CHAIN</div><div class="hud-v" id="audit-chain-word">—</div></div>`;
+    if (recent) {
+      const evs = await api(`/cases/${recent.id}/audit`);
+      $('audit-page-log').innerHTML = evs.map(ev => {
+        const t = ev.timestamp ? new Date(ev.timestamp).toTimeString().slice(0, 8) : '--:--:--';
+        return `<div class="al-row"><span>${t}</span>  <span class="al-type">${esc(ev.event_type)}</span>  <span class="al-hash">HASH=${esc(String(ev.current_hash).slice(0, 16))}…</span></div>`;
+      }).join('') || '<div class="dim">NO EVENTS</div>';
+      const v = await api(`/cases/${recent.id}/audit/verify`);
+      const w = $('audit-chain-word');
+      w.textContent = v.valid ? 'INTACT' : 'BROKEN';
+      w.style.color = v.valid ? 'var(--green)' : 'var(--red)';
+    }
+  } catch (e) { toast(e.message); }
+}
+$('btn-audit-verify').onclick = async () => {
+  try {
+    const cases = await api('/cases');
+    if (!cases.length) { toast('NO CASES ON RECORD'); return; }
+    const v = await api(`/cases/${cases[0].id}/audit/verify`);
+    toast(v.valid ? 'CHAIN VERIFIED — INTACT' : 'CHAIN BROKEN');
+    loadAuditPage();
+  } catch (e) { toast(e.message); }
+};
+
+async function loadReports() {
+  try {
+    const a = await api('/intelligence/analytics');
+    $('reports-hud').innerHTML = `
+      <div class="hud-cell"><div class="hud-k">TOTAL CASES</div><div class="hud-v">${a.total_cases}</div></div>
+      <div class="hud-cell"><div class="hud-k">SCREENED RUNS</div><div class="hud-v">${a.screened_runs}</div></div>
+      <div class="hud-cell"><div class="hud-k">AVG RISK</div><div class="hud-v">${a.average_risk_score ?? '—'}</div></div>
+      <div class="hud-cell"><div class="hud-k">AVG SCREENING</div><div class="hud-v">${a.average_screening_seconds != null ? a.average_screening_seconds + 's' : '—'}</div></div>
+      <div class="hud-cell"><div class="hud-k">WINDOW</div><div class="hud-v">${a.window_days}D</div></div>`;
+    const rd = a.risk_distribution || {};
+    const maxR = Math.max(1, ...Object.values(rd));
+    $('reports-risk').innerHTML = Object.entries(rd).map(([k, v]) => {
+      const cls = k === 'high' ? 'st-fail' : k === 'medium' ? 'st-review' : k === 'low' ? 'st-pass' : 'st-review';
+      const barW = (v / maxR) * 100;
+      return `<div class="trow"><span class="k" style="width:150px;"><span class="st ${cls}"><span class="sq"></span> ${k.toUpperCase()}</span></span>
+        <span style="flex:1;border:var(--bd-thin);height:12px;position:relative;"><span style="position:absolute;inset:0;width:${barW}%;background:var(--ink);"></span></span>
+        <span class="v">${v}</span></div>`;
+    }).join('');
+    const lat = a.avg_stage_latency_ms || {};
+    const maxL = Math.max(1, ...Object.values(lat));
+    $('reports-latency').innerHTML = Object.entries(lat).map(([k, v]) =>
+      `<div class="trow"><span class="k" style="width:170px;">${esc(k.replace(/_/g, ' ').toUpperCase())}</span>
+        <span style="flex:1;border:var(--bd-thin);height:12px;position:relative;"><span style="position:absolute;inset:0;width:${(v / maxL) * 100}%;background:var(--ink);"></span></span>
+        <span class="v">${v}ms</span></div>`).join('') || '<div class="dim">NO TIMING DATA</div>';
+  } catch (e) { toast(e.message); }
+}
+
+async function loadSystem() {
+  try {
+    const h = await api('/intelligence/health');
+    const rows = [
+      ['DATABASE', h.database?.status, h.database?.last_audit_event ? 'LAST EVENT ' + h.database.last_audit_event.slice(0, 19) : ''],
+      ['OCR ENGINE', h.ocr?.status, 'TESSERACT / PADDLE FALLBACK'],
+      ['FACE MODEL', h.face_model?.status, `${h.face_model?.model || ''} ${h.face_model?.model_version || ''}`],
+      ['LIVENESS', h.liveness?.status, h.liveness?.model || ''],
+      ['DEEPFAKE', h.deepfake?.status, `${h.deepfake?.model || ''}${h.deepfake?.note ? ' — ' + h.deepfake.note : ''}`],
+      ['FACE REUSE', h.face_reuse?.status, `VECTOR STORE: ${h.face_reuse?.backend || ''}`],
+      ['RISK ENGINE', h.risk_engine?.status, h.risk_engine?.model || ''],
+      ['AUDIT CHAIN', h.audit_chain?.status, 'SHA-256 APPEND-ONLY'],
+    ];
+    $('system-health').innerHTML = rows.map(([k, st, note]) => {
+      const state = mapStatus(st === 'operational' ? 'success' : st);
+      return `<div class="trow"><span class="k">${k}</span>
+        <span class="st st-${state === 'pass' ? 'pass' : state === 'fail' ? 'fail' : 'notrun'}"><span class="sq"></span> ${esc(String(st || '—').toUpperCase())}</span>
+        <span class="v" style="margin-left:auto;color:var(--ink-soft);font-size:10px;">${esc(String(note || '').toUpperCase())}</span></div>`;
+    }).join('');
+  } catch (e) { $('system-health').innerHTML = `<div class="dim">${esc(e.message)}</div>`; }
+}
+
+async function loadEngine() {
+  try {
+    const h = await api('/intelligence/health');
+    const ok = h.deepfake?.status === 'operational' && h.face_model?.status === 'operational';
+    $('engine-word').textContent = ok ? 'ONLINE' : 'DEGRADED';
+    $('foot-engine').textContent = '● ' + (ok ? 'ONLINE' : 'DEGRADED');
+  } catch { $('engine-word').textContent = 'OFFLINE'; }
+}
+
+/* settings */
+function renderSettings() {
+  $('set-role').value = ROLE; $('set-user').value = USER;
+  $('session-info').textContent = TOKEN ? 'SESSION TOKEN MINTED · ROLE ' + ROLE.toUpperCase() : 'NO TOKEN';
+  $('settings-rows').innerHTML = [
+    ['SCREENING ENGINE', 'IDENTITYSCREEN 2.1.0-FORENSIC'],
+    ['FACE MODEL', 'YUNET + SFACE (ONNX)'],
+    ['DEEPFAKE MODEL', 'RESNET18 FORGERY CLASSIFIER'],
+    ['AUDIT LEDGER', 'LOCAL SHA-256 HASH CHAIN'],
+    ['CASE: SIH', '26188'],
+    ['NODE', 'INDIA-01'],
+  ].map(([k, v]) => `<div class="trow"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join('');
+}
+$('btn-reauth').onclick = async () => {
+  USER = $('set-user').value.trim() || 'demo-officer';
+  ROLE = $('set-role').value;
+  localStorage.setItem('is_user', USER); localStorage.setItem('is_role', ROLE);
+  TOKEN = null;
+  try { await mintToken(); toast('SESSION MINTED — ' + ROLE.toUpperCase()); renderSettings(); loadEngine(); }
+  catch (e) { toast(e.message); }
+};
+
+/* topbar */
+$('tb-exit').onclick = () => confirmBox('CONFIRM EXIT', 'Close the forensic session? The browser tab will navigate away from the console.', () => { window.location.href = '/client/'; });
+$('global-search').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const q = e.target.value.trim();
+  if (!q) return;
+  $('case-filter-name').value = q; goto('cases');
+});
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); $('global-search').focus(); }
+  if (e.key === 'Escape') $('modal-back').classList.remove('on');
+});
+
+/* boot */
+buildNav();
+document.querySelector('.nav-item[data-nav="screening"]').classList.add('active');
+renderLedger([], 'idle');
+renderMatrix([]);
+mintToken().then(() => { loadEngine(); }).catch(e => toast(e.message));
+</script>
+</body>
+</html>

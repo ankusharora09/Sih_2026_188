@@ -1,0 +1,11 @@
+fastapi[standard]
+uvicorn[standard]
+SQLAlchemy>=2.0
+pydantic>=2.0
+python-multipart
+redis
+
+# optional dependencies for vector stores
+faiss-cpu
+pgvector
+werkzeug>=3.0.0

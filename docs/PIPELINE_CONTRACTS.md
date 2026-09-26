@@ -1,0 +1,258 @@
+# Pipeline Contracts
+
+Each pipeline stage implements a well‑defined contract expressed as JSON. The contract includes fields for **input**, **output**, **status**, **confidence**, **errors**, and **metadata**. All stages are **independently replaceable** – a mock implementation can be swapped with a production model without changing the surrounding orchestration.
+
+---
+
+## 1. Preprocessing & Classification
+
+```json
+{
+  "stage": "preprocessing",
+  "input": {
+    "file_id": "uuid",
+    "file_type": "document",
+    "content_hash": "sha256:..."
+  },
+  "output": {
+    "processed_image": "base64-encoded PNG",
+    "document_type": "passport|driving_license|id_card",
+    "quality_score": 0.0-1.0
+  },
+  "status": "completed|failed|unavailable",
+  "confidence": 0.0-1.0,
+  "errors": null,
+  "metadata": {
+    "duration_ms": 123,
+    "tool": "opencv",
+    "parameters": { "blur_threshold": 0.3 }
+  }
+}
+```
+
+---
+
+## 2. OCR Extraction
+
+```json
+{
+  "stage": "ocr",
+  "input": { "processed_image": "base64-encoded PNG" },
+  "output": {
+    "text": "raw OCR string",
+    "fields": {
+      "name": { "value": "John Doe", "confidence": 0.96 },
+      "dob": { "value": "1990-01-01", "confidence": 0.93 },
+      "document_number": { "value": "A1234567", "confidence": 0.98 }
+    }
+  },
+  "status": "completed|failed|unavailable",
+  "confidence": 0.0-1.0,
+  "errors": null,
+  "metadata": {
+    "engine": "paddleocr",
+    "duration_ms": 210,
+    "language": "en"
+  }
+}
+```
+
+---
+
+## 3. Document Tampering Detection
+
+```json
+{
+  "stage": "tampering",
+  "input": { "processed_image": "base64-encoded PNG" },
+  "output": {
+    "tamper_score": 0.0-1.0,
+    "indicators": ["ELA anomaly", "compression artifacts"]
+  },
+  "status": "completed|failed|unavailable",
+  "confidence": 0.0-1.0,
+  "errors": null,
+  "metadata": {
+    "method": "heuristic",
+    "duration_ms": 150
+  }
+}
+```
+
+---
+
+## 4. Liveness / Anti‑Spoof Detection
+
+```json
+{
+  "stage": "liveness",
+  "input": { "live_capture_frames": ["base64-encoded JPEG", ...] },
+  "output": {
+    "liveness_score": 0.0-1.0,
+    "pass": true,
+    "details": { "texture": 0.85, "motion": 0.78 }
+  },
+  "status": "completed|failed|unavailable",
+  "confidence": 0.0-1.0,
+  "errors": null,
+  "metadata": {
+    "model": "celeba-spoof",
+    "duration_ms": 320
+  }
+}
+```
+
+---
+
+## 5. Deepfake Detection (optional stage)
+
+```json
+{
+  "stage": "deepfake",
+  "input": { "live_capture_frames": ["base64-encoded JPEG", ...] },
+  "output": {
+    "deepfake_score": 0.0-1.0,
+    "is_deepfake": false
+  },
+  "status": "completed|failed|unavailable",
+  "confidence": 0.0-1.0,
+  "errors": null,
+  "metadata": { "model": "faceforensics++", "duration_ms": 400 }
+}
+```
+
+---
+
+## 6. Validation & Watchlist Rules
+
+```json
+{
+  "stage": "validation",
+  "input": { "fields": { "name": "...", "dob": "...", "document_number": "..." } },
+  "output": {
+    "valid": true,
+    "issues": [],
+    "watchlist_hits": []
+  },
+  "status": "completed|failed|unavailable",
+  "confidence": 1.0,
+  "errors": null,
+  "metadata": { "rules_version": "v1", "duration_ms": 45 }
+}
+```
+
+---
+
+## 7. Face Verification
+
+```json
+{
+  "stage": "face_verification",
+  "input": {
+    "document_face_embedding": "base64-encoded vector",
+    "live_face_embedding": "base64-encoded vector"
+  },
+  "output": {
+    "match": true,
+    "similarity": 0.87,
+    "threshold": 0.60,
+    "confidence": 0.94
+  },
+  "status": "completed|failed|unavailable",
+  "errors": null,
+  "metadata": { "model": "arcface", "duration_ms": 120 }
+}
+```
+
+---
+
+## 8. Anomaly / Fraud Detection
+
+```json
+{
+  "stage": "anomaly_detection",
+  "input": { "case_id": "uuid", "embedding": "base64-encoded vector" },
+  "output": {
+    "anomaly_score": 0.0-1.0,
+    "flags": ["reuse_of_face", "high_submission_rate"]
+  },
+  "status": "completed|failed|unavailable",
+  "confidence": 0.0-1.0,
+  "errors": null,
+  "metadata": { "method": "rule_based", "duration_ms": 80 }
+}
+```
+
+---
+
+## 9. Risk Scoring
+
+```json
+{
+  "stage": "risk_scoring",
+  "input": {
+    "ocr_confidence": 0.96,
+    "tamper_score": 0.42,
+    "liveness_score": 0.88,
+    "face_similarity": 0.87,
+    "anomaly_score": 0.31,
+    "validation_issues": 0
+  },
+  "output": {
+    "risk_score": 74,
+    "risk_band": "HIGH",
+    "reasons": [
+      "Document tampering signal detected",
+      "Face similarity below configured threshold",
+      "Identity reuse pattern observed"
+    ]
+  },
+  "status": "completed",
+  "confidence": 1.0,
+  "errors": null,
+  "metadata": { "algorithm": "weighted_sum", "duration_ms": 30 }
+}
+```
+
+---
+
+## 10. Explanation (LLM‑assisted)
+
+```json
+{
+  "stage": "explanation",
+  "input": { "risk_score": 74, "reasons": ["..."] },
+  "output": {
+    "summary": "The case received a HIGH risk rating due to detected document tampering and a low face‑match similarity.",
+    "details": "...human‑readable explanation generated by a local LLM..."
+  },
+  "status": "completed|failed|unavailable",
+  "confidence": 1.0,
+  "errors": null,
+  "metadata": { "model": "ollama-qwen3.5", "duration_ms": 150 }
+}
+```
+
+---
+
+## 11. Audit Event (final stage)
+
+```json
+{
+  "stage": "audit",
+  "input": { "event_type": "risk_scored", "payload": { ... } },
+  "output": {
+    "event_id": "uuid",
+    "timestamp": "iso8601",
+    "actor": "user-id",
+    "previous_hash": "sha256:...",
+    "current_hash": "sha256:..."
+  },
+  "status": "completed",
+  "metadata": { "duration_ms": 10 }
+}
+```
+
+---
+
+**All stages must return the exact JSON schema above. Missing fields constitute a contract violation and should be logged as an error.**

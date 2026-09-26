@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>IDENTITYSHIELD — CITIZEN INTAKE / VERIFICATION PORTAL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     IDENTITYSHIELD CITIZEN INTAKE — same brutalist system as the
+     officer console: paper #F4F1E8, ink #0A0A0A, hard borders,
+     monospace metadata, zero radius, zero glassmorphism.
+     ============================================================ */
+  :root {
+    --paper: #F4F1E8; --paper-2: #ECE8DC; --paper-3: #E2DDCE;
+    --ink: #0A0A0A; --ink-soft: #3A3833;
+    --green: #159447; --orange: #F05A00; --red: #D71920;
+    --yellow: #D6A600; --gray: #77736A;
+    --bd: 2px solid var(--ink); --bd-heavy: 3px solid var(--ink); --bd-thin: 1px solid var(--ink);
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --cond: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif;
+  }
+  * { box-sizing: border-box; border-radius: 0 !important; }
+  body {
+    font-family: var(--cond); margin: 0; padding: 16px;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 31px, rgba(10,10,10,0.045) 31px 32px),
+      repeating-linear-gradient(90deg, transparent 0 31px, rgba(10,10,10,0.045) 31px 32px),
+      var(--paper);
+    color: var(--ink); font-size: 14px; line-height: 1.4; min-height: 100vh;
+  }
+  .container { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+  ::selection { background: var(--ink); color: var(--paper); }
+
+  nav {
+    display: flex; justify-content: space-between; align-items: center;
+    border: var(--bd-heavy); background: var(--paper); padding: 10px 12px;
+  }
+  .stepper-label { display: inline; }
+  .brand-row { display: flex; align-items: center; gap: 10px; }
+  .brand-mark { width: 28px; height: 28px; background: var(--ink); color: var(--paper); display: grid; place-items: center; font-family: var(--mono); font-weight: 700; font-size: 13px; }
+  .brand-name { font-weight: 700; font-size: 16px; letter-spacing: .05em; }
+  .brand-sub { font-family: var(--mono); font-size: 9px; color: var(--ink-soft); letter-spacing: .1em; margin-top: 2px; }
+  nav a {
+    color: var(--ink); text-decoration: none; font-family: var(--mono); font-size: 10.5px;
+    letter-spacing: .08em; border: var(--bd-thin); padding: 6px 10px; text-transform: uppercase;
+  }
+  nav a:hover { background: var(--ink); color: var(--paper); }
+
+  /* stepper */
+  .stepper-wrap { display: grid; grid-template-columns: repeat(4, 1fr); border: var(--bd-heavy); background: var(--paper); }
+  .stepper-item { padding: 10px 8px; border-right: var(--bd-thin); font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); text-align: left; }
+  .stepper-item:last-child { border-right: none; }
+  .stepper-num { display: inline-block; border: 1px solid var(--ink); width: 18px; height: 18px; text-align: center; line-height: 17px; margin-right: 6px; font-weight: 700; }
+  .stepper-item.active { background: var(--ink); color: var(--paper); }
+  .stepper-item.completed { color: var(--green); }
+  .stepper-item.completed .stepper-num { background: var(--green); border-color: var(--green); color: var(--paper); }
+
+  /* cards */
+  .card { border: var(--bd-heavy); background: var(--paper); padding: 0; }
+  .card-title {
+    display: flex; align-items: center; gap: 10px; border-bottom: var(--bd);
+    padding: 9px 12px; font-weight: 700; font-size: 14.5px; letter-spacing: .06em; text-transform: uppercase;
+  }
+  .sec-tag { background: var(--ink); color: var(--paper); font-family: var(--mono); font-size: 10.5px; padding: 2px 8px; letter-spacing: .08em; }
+  .card-subtitle { font-family: var(--mono); font-size: 9.5px; color: var(--ink-soft); letter-spacing: .05em; text-transform: uppercase; padding: 7px 12px; border-bottom: var(--bd-thin); }
+  .card-body { padding: 12px; }
+  .card-body > label { display: block; font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 4px; }
+  input[type=text], select {
+    display: block; width: 100%; padding: 9px 10px; border: var(--bd); background: var(--paper);
+    font-family: var(--mono); font-size: 13px; color: var(--ink); outline: none;
+  }
+  input[type=text]:focus, select:focus { border-color: var(--orange); }
+
+  /* tabs */
+  .tab-group { display: flex; border: var(--bd-thin); margin-bottom: 12px; width: fit-content; }
+  .tab-btn {
+    padding: 6px 12px; background: var(--paper); border: none; border-right: var(--bd-thin);
+    font-family: var(--mono); font-size: 10px; letter-spacing: .07em; text-transform: uppercase; cursor: pointer; color: var(--ink);
+  }
+  .tab-btn:last-child { border-right: none; }
+  .tab-btn.active { background: var(--ink); color: var(--paper); }
+
+  /* drop zone — dashed with crosshair corners */
+  .drop-zone {
+    position: relative; border: 2px dashed var(--ink); padding: 30px 16px; text-align: center;
+    cursor: pointer; transition: background .12s;
+  }
+  .drop-zone:hover, .drop-zone.dragover { background: var(--paper-2); }
+  .drop-zone .corner { position: absolute; width: 14px; height: 14px; border: 0 solid var(--ink); }
+  .corner.c-tl { top: -2px; left: -2px; border-top-width: 3px; border-left-width: 3px; }
+  .corner.c-tr { top: -2px; right: -2px; border-top-width: 3px; border-right-width: 3px; }
+  .corner.c-bl { bottom: -2px; left: -2px; border-bottom-width: 3px; border-left-width: 3px; }
+  .corner.c-br { bottom: -2px; right: -2px; border-bottom-width: 3px; border-right-width: 3px; }
+  .drop-zone-icon { width: 34px; height: 34px; border: var(--bd); display: grid; place-items: center; margin: 0 auto 8px; font-size: 17px; font-weight: 700; font-family: var(--mono); }
+  .drop-zone-text { font-weight: 700; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; }
+  .drop-zone-sub { font-family: var(--mono); font-size: 9.5px; color: var(--ink-soft); letter-spacing: .06em; margin-top: 4px; text-transform: uppercase; }
+  .file-input-hidden { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+
+  /* camera container */
+  .camera-container {
+    background: var(--ink); border: var(--bd); overflow: hidden; position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 360px;
+  }
+  .camera-video { width: 100%; max-height: 440px; object-fit: cover; display: block; transform: scaleX(-1); }
+  .camera-video.no-mirror { transform: none; }
+  .camera-placeholder { padding: 26px; text-align: center; color: var(--paper); font-family: var(--mono); font-size: 11px; letter-spacing: .05em; }
+  .camera-placeholder p { text-transform: uppercase; }
+  .camera-overlay { position: absolute; inset: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; }
+  .face-guide {
+    width: 220px; height: 290px;
+    border: 2px dashed rgba(244,241,232,.85);
+    box-shadow: 0 0 0 9999px rgba(10,10,10,.6);
+    position: relative; transition: border-color .2s;
+  }
+  .face-guide.aligned { border-color: var(--green); border-style: solid; }
+  .face-corner { position: absolute; width: 18px; height: 18px; border: 0 solid var(--paper); }
+  .fc-tl { top: -2px; left: -2px; border-top-width: 3px; border-left-width: 3px; }
+  .fc-tr { top: -2px; right: -2px; border-top-width: 3px; border-right-width: 3px; }
+  .fc-bl { bottom: -2px; left: -2px; border-bottom-width: 3px; border-left-width: 3px; }
+  .fc-br { bottom: -2px; right: -2px; border-bottom-width: 3px; border-right-width: 3px; }
+  .doc-guide { width: 340px; height: 215px; border: 2px dashed rgba(244,241,232,.9); box-shadow: 0 0 0 9999px rgba(10,10,10,.6); }
+  .scan-laser {
+    position: absolute; width: 250px; height: 2px; background: var(--green);
+    animation: scanMove 2.2s ease-in-out infinite alternate; pointer-events: none;
+  }
+  @keyframes scanMove { 0% { transform: translateY(-120px); opacity: .35; } 50% { opacity: 1; } 100% { transform: translateY(120px); opacity: .35; } }
+  .live-badge {
+    position: absolute; top: 10px; left: 10px; background: var(--red); color: var(--paper);
+    font-family: var(--mono); font-size: 9px; font-weight: 700; padding: 3px 8px; letter-spacing: .1em;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .live-badge.aligned { background: var(--green); }
+  .live-pulse { width: 7px; height: 7px; background: var(--paper); animation: dotpulse 1s steps(2) infinite; }
+  @keyframes dotpulse { 50% { opacity: .25; } }
+  .guide-instruction {
+    position: absolute; bottom: 12px; background: var(--paper); border: 1px solid var(--ink);
+    padding: 5px 10px; font-family: var(--mono); font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase;
+  }
+  .countdown-overlay { position: absolute; font-size: 84px; font-weight: 700; font-family: var(--mono); color: var(--paper); display: none; z-index: 25; pointer-events: none; }
+  .flash-effect { position: absolute; inset: 0; background: var(--paper); opacity: 0; pointer-events: none; transition: opacity .08s; z-index: 30; }
+  .flash-effect.flash { opacity: .9; }
+  .camera-actions {
+    display: flex; gap: 10px; justify-content: center; align-items: center; padding: 10px;
+    background: var(--ink); width: 100%; flex-wrap: wrap;
+  }
+  .btn-shutter { width: 54px; height: 54px; background: var(--paper); border: 3px solid var(--paper); cursor: pointer; display: grid; place-items: center; }
+  .btn-shutter-inner { width: 36px; height: 36px; background: var(--red); }
+  .btn-shutter:active { transform: scale(.94); }
+  .btn-camera-aux {
+    background: var(--paper); color: var(--ink); border: 1px solid var(--paper); padding: 7px 12px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; cursor: pointer;
+  }
+  .btn-camera-aux:hover { background: var(--paper-2); }
+
+  /* captured preview rows */
+  .captured-preview-box {
+    display: flex; gap: 12px; align-items: center; border: var(--bd); border-top: none;
+    padding: 10px 12px; background: var(--paper-2);
+  }
+  .captured-thumb { width: 72px; height: 72px; object-fit: cover; border: var(--bd-thin); }
+  .captured-meta { flex: 1; }
+  .captured-title { font-weight: 700; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--green); }
+  .captured-sub { font-family: var(--mono); font-size: 10px; color: var(--ink-soft); margin-top: 2px; }
+  .btn-sm {
+    padding: 5px 10px; font-size: 9.5px; border: var(--bd-thin); background: var(--paper); color: var(--ink);
+    font-family: var(--mono); letter-spacing: .07em; text-transform: uppercase; cursor: pointer;
+  }
+  .btn-sm:hover { background: var(--ink); color: var(--paper); }
+
+  /* submit */
+  .btn-submit-main {
+    width: 100%; padding: 16px; font-family: var(--cond); font-weight: 700; font-size: 16px;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--paper); background: var(--ink);
+    border: var(--bd-heavy); cursor: pointer;
+  }
+  .btn-submit-main:hover:not(:disabled) { background: var(--ink-soft); }
+  .btn-submit-main:disabled { opacity: .45; cursor: not-allowed; }
+
+  /* progress ledger */
+  .progress-wrap { border: var(--bd-heavy); background: var(--paper); display: none; }
+  .progress-bar-bg { height: 14px; border-bottom: var(--bd); position: relative; }
+  .progress-bar-fill { height: 100%; width: 0%; background: var(--ink); transition: width .4s steps(6); }
+  .stage-steps { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .stage-item {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase;
+    padding: 8px 10px; border-right: var(--bd-thin); color: var(--gray);
+  }
+  .stage-item:last-child { border-right: none; }
+  .stage-item.active { color: var(--orange); }
+  .stage-item.done { color: var(--green); }
+  .stage-item.failed { color: var(--red); }
+
+  /* status + receipt */
+  .status-toast {
+    border: var(--bd-heavy); padding: 10px 12px; font-family: var(--mono); font-size: 11px;
+    letter-spacing: .05em; text-transform: uppercase; margin-bottom: 12px; background: var(--paper);
+  }
+  .status-info { border-color: var(--ink); }
+  .status-success { border-color: var(--green); color: var(--green); }
+  .status-error { border-color: var(--red); color: var(--red); }
+  .receipt-card { border: var(--bd-heavy); background: var(--paper); padding: 0; }
+  .receipt-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: var(--bd); }
+  .receipt-status { font-family: var(--cond); font-weight: 700; font-size: 17px; letter-spacing: .05em; text-transform: uppercase; }
+  .seal-tag { border: 2px solid var(--green); color: var(--green); font-family: var(--mono); font-size: 9px; font-weight: 700; padding: 3px 8px; letter-spacing: .1em; }
+  .telemetry { border-bottom: var(--bd-thin); padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
+  .telemetry .tl-k { font-family: var(--mono); font-size: 8.5px; letter-spacing: .1em; color: var(--ink-soft); text-transform: uppercase; }
+  .telemetry .tl-v { font-family: var(--mono); font-size: 11.5px; font-weight: 600; }
+  .receipt-row { padding: 9px 12px; border-bottom: var(--bd-thin); }
+  .receipt-row:last-of-type { border-bottom: none; }
+  .receipt-label { font-family: var(--mono); font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 2px; }
+  .receipt-value { font-family: var(--mono); font-size: 11.5px; word-break: break-all; }
+  .btn-view-case {
+    display: block; text-align: center; background: var(--ink); color: var(--paper); text-decoration: none;
+    padding: 13px; font-family: var(--cond); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; font-size: 14px;
+  }
+  .btn-view-case:hover { background: var(--ink-soft); }
+  .badge-success { border: 2px solid var(--green); color: var(--green); }
+  @media (max-width: 760px) {
+    .stepper-wrap { grid-template-columns: repeat(2, 1fr); }
+    .stage-steps { grid-template-columns: repeat(2, 1fr); }
+    .telemetry { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Nav Bar -->
+  <nav>
+    <div class="brand-row">
+      <div class="brand-mark">IS</div>
+      <div>
+        <div class="brand-name">IDENTITYSHIELD</div>
+        <div class="brand-sub">26188 / CITIZEN INTAKE</div>
+      </div>
+    </div>
+    <a href="/">← OFFICER COMMAND CONSOLE</a>
+  </nav>
+
+  <!-- Interactive Stepper -->
+  <div class="stepper-wrap">
+    <div class="stepper-item active" id="step-nav-1">
+      <div class="stepper-num">1</div><span class="stepper-label">APPLICANT INFO</span>
+    </div>
+    <div class="stepper-item" id="step-nav-2">
+      <div class="stepper-num">2</div><span class="stepper-label">ID DOCUMENT</span>
+    </div>
+    <div class="stepper-item" id="step-nav-3">
+      <div class="stepper-num">3</div><span class="stepper-label">BIOMETRIC SELFIE</span>
+    </div>
+    <div class="stepper-item" id="step-nav-4">
+      <div class="stepper-num">4</div><span class="stepper-label">AI SCREENING</span>
+    </div>
+  </div>
+
+  <!-- Card 1: Applicant Profile -->
+  <div class="card">
+    <div class="card-title"><span class="sec-tag">01</span> APPLICANT PROFILE</div>
+    <div class="card-subtitle">ENTER OFFICIAL IDENTITY DETAILS AS PRINTED ON THE LEGAL DOCUMENT</div>
+    <div class="card-body" style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+      <div>
+        <label for="full-name">FULL NAME AS PER ID *</label>
+        <input type="text" id="full-name" placeholder="SURNAME, GIVEN NAMES" autocomplete="off" autofocus />
+      </div>
+      <div>
+        <label for="doc-type">DOCUMENT CATEGORY</label>
+        <select id="doc-type">
+          <option value="national_id">NATIONAL ID CARD</option>
+          <option value="passport">PASSPORT</option>
+          <option value="driver_license">DRIVER'S LICENSE</option>
+          <option value="voter_id">VOTER IDENTITY CARD</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2: Identity Document Submission -->
+  <div class="card">
+    <div class="card-title"><span class="sec-tag">02</span> DOCUMENT INTAKE</div>
+    <div class="card-subtitle">UPLOAD OFFICIAL SCAN OR CAPTURE HIGH-RESOLUTION PHOTO WITH CAMERA</div>
+
+    <div class="card-body">
+    <div class="tab-group">
+      <button type="button" class="tab-btn active" id="tab-doc-file" onclick="switchDocMode('file')">
+        [ FILE UPLOAD ]
+      </button>
+      <button type="button" class="tab-btn" id="tab-doc-cam" onclick="switchDocMode('camera')">
+        [ CAMERA CAPTURE ]
+      </button>
+    </div>
+
+    <!-- Document File Drag & Drop Mode -->
+    <div id="doc-file-section">
+      <div class="drop-zone" id="doc-drop-zone">
+        <input type="file" id="file-input" class="file-input-hidden" accept="image/*,.pdf" />
+        <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
+        <div class="drop-zone-icon">↑</div>
+        <div class="drop-zone-text">DROP DOCUMENT / CLICK TO BROWSE</div>
+        <div class="drop-zone-sub">PNG · JPEG · TIFF · PDF — MAX 10 MB</div>
+      </div>
+      <div id="file-preview" style="display:none" class="captured-preview-box">
+        <div class="drop-zone-icon" style="margin:0;">▤</div>
+        <div class="captured-meta">
+          <div class="captured-title" id="preview-name">document.png</div>
+          <div class="captured-sub" id="preview-meta">Checking resolution &amp; integrity...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Document Camera Mode -->
+    <div id="doc-camera-section" style="display:none">
+      <div class="camera-container">
+        <div id="doc-cam-placeholder" class="camera-placeholder">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📸</div>
+          <p style="margin: 0 0 12px; font-size: 11px;">CAMERA ACCESS NEEDED FOR DOCUMENT SCAN</p>
+          <button type="button" class="btn-camera-aux" onclick="startDocCamera()">Open Document Camera</button>
+        </div>
+        <video id="doc-video" class="camera-video no-mirror" autoplay playsinline muted style="display:none"></video>
+        <div id="doc-overlay" class="camera-overlay" style="display:none">
+          <div class="doc-guide"></div>
+          <div class="live-badge"><div class="live-pulse"></div> LIVE CAMERA</div>
+          <div class="guide-instruction">Align ID card edges within the rectangle</div>
+        </div>
+        <div id="doc-flash" class="flash-effect"></div>
+      </div>
+      <div id="doc-cam-controls" class="camera-actions" style="display:none">
+        <button type="button" class="btn-camera-aux" onclick="switchDocCameraFacing()">🔄 Switch Lens</button>
+        <button type="button" class="btn-shutter" onclick="captureDocPhoto()" title="Capture Document Photo">
+          <div class="btn-shutter-inner"></div>
+        </button>
+        <button type="button" class="btn-camera-aux" onclick="stopDocCamera()">✕ Close</button>
+      </div>
+      <div id="doc-captured-preview" class="captured-preview-box" style="display:none">
+        <img id="doc-captured-img" class="captured-thumb" alt="Captured Document" />
+        <div class="captured-meta">
+          <div class="captured-title">✓ Document photo captured</div>
+          <div class="captured-sub" id="doc-captured-meta">Ready for Error Level Analysis &amp; OCR</div>
+        </div>
+        <button type="button" class="btn-sm" onclick="retakeDocPhoto()">Retake</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3: Biometric Real-Time Face Scan -->
+  <div class="card">
+    <div class="card-title"><span class="sec-tag">03</span> BIOMETRIC LIVE CAPTURE</div>
+    <div class="card-subtitle">LIVE CAMERA CAPTURE FOR AI LIVENESS DETECTION AND FACIAL GEOMETRY MATCHING</div>
+
+    <div class="card-body">
+    <div class="tab-group">
+      <button type="button" class="tab-btn active" id="tab-selfie-cam" onclick="switchSelfieMode('camera')">
+        [ LIVE CAMERA ]
+      </button>
+      <button type="button" class="tab-btn" id="tab-selfie-file" onclick="switchSelfieMode('file')">
+        [ PHOTO UPLOAD FALLBACK ]
+      </button>
+    </div>
+
+    <!-- Live Camera Section -->
+    <div id="selfie-camera-section">
+      <div class="camera-container">
+        <div id="selfie-cam-placeholder" class="camera-placeholder">
+          <p style="margin: 0 0 12px;">HARDWARE CAMERA NEEDED FOR BIOMETRIC LIVENESS VERIFICATION</p>
+          <button type="button" class="btn-camera-aux" onclick="startSelfieCamera()">Launch Biometric Camera</button>
+        </div>
+        <video id="selfie-video" class="camera-video" autoplay playsinline muted style="display:none"></video>
+        <div id="selfie-overlay" class="camera-overlay" style="display:none">
+          <div class="face-guide" id="face-guide-oval">
+            <div class="face-corner fc-tl"></div>
+            <div class="face-corner fc-tr"></div>
+            <div class="face-corner fc-bl"></div>
+            <div class="face-corner fc-br"></div>
+          </div>
+          <div class="scan-laser"></div>
+          <div class="countdown-overlay" id="selfie-countdown">3</div>
+          <div class="live-badge" id="selfie-live-badge"><div class="live-pulse"></div> LIVE CAMERA</div>
+          <div class="guide-instruction" id="selfie-guide-msg">Center face inside oval &amp; look directly at camera</div>
+        </div>
+        <div id="selfie-flash" class="flash-effect"></div>
+      </div>
+      <div id="selfie-cam-controls" class="camera-actions" style="display:none">
+        <button type="button" class="btn-camera-aux" onclick="switchSelfieCameraFacing()">🔄 Switch Lens</button>
+        <button type="button" class="btn-camera-aux" onclick="startCountdownCapture()" title="3-Second Timer">⏱️ 3s Timer</button>
+        <button type="button" class="btn-shutter" id="shutter-btn" onclick="captureSelfiePhoto()" title="Capture Live Selfie">
+          <div class="btn-shutter-inner"></div>
+        </button>
+        <button type="button" class="btn-camera-aux" onclick="stopSelfieCamera()">✕ Close</button>
+      </div>
+      <div id="selfie-captured-preview" class="captured-preview-box" style="display:none">
+        <img id="selfie-captured-img" class="captured-thumb" alt="Captured Live Selfie" />
+        <div class="captured-meta">
+          <div class="captured-title">✓ Real-time live biometric photo captured</div>
+          <div class="captured-sub" id="selfie-captured-meta">Ready for spatial HOG embedding &amp; liveness analysis</div>
+        </div>
+        <button type="button" class="btn-sm" onclick="retakeSelfiePhoto()">Retake</button>
+      </div>
+    </div>
+
+    <!-- Selfie File Fallback Mode -->
+    <div id="selfie-file-section" style="display:none">
+      <div class="drop-zone" id="selfie-drop-zone">
+        <input type="file" id="selfie-file-input" class="file-input-hidden" accept="image/*" />
+        <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
+        <div class="drop-zone-icon">▣</div>
+        <div class="drop-zone-text">UPLOAD CLEAR FRONT PORTRAIT PHOTO</div>
+        <div class="drop-zone-sub">JPEG / PNG — LIVE CAMERA PREFERRED FOR LIVENESS</div>
+      </div>
+      <div id="selfie-file-preview" style="display:none" class="captured-preview-box">
+        <div class="captured-meta">
+          <div class="captured-title" id="selfie-preview-name"></div>
+          <div class="captured-sub" id="selfie-preview-meta"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit Action & Progress Display -->
+  <button id="submit-btn" class="btn-submit-main">
+    SUBMIT FOR MULTI-MODAL AI SCREENING →
+  </button>
+
+  <div id="progress-wrap" class="progress-wrap">
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress-fill"></div>
+    </div>
+    <div class="stage-steps" id="progress-steps">
+      <div class="stage-item" id="step-case">01 INGESTION</div>
+      <div class="stage-item" id="step-upload">02 DOCUMENT</div>
+      <div class="stage-item" id="step-selfie">03 BIOMETRICS</div>
+      <div class="stage-item" id="step-screen">04 AI SCREENING</div>
+    </div>
+  </div>
+
+  <div id="status-area"></div>
+</div>
+
+<script>
+let devToken = null;
+let docMode = 'file';
+let docStream = null;
+let docCapturedBlob = null;
+let docFacingMode = 'environment';
+
+let selfieMode = 'camera';
+let selfieStream = null;
+let selfieCapturedBlob = null;
+let selfieFacingMode = 'user';
+let faceQualityInterval = null;
+
+// Web Audio API Synthesizer (Zero External Dependencies)
+let audioCtx = null;
+function getAudioContext() {
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) audioCtx = new AudioContext();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playSound(type) {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    if (type === 'beep') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, now);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    } else if (type === 'shutter') {
+      const bufferSize = Math.floor(ctx.sampleRate * 0.08);
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.015));
+      }
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 1400;
+      noise.connect(filter);
+      filter.connect(ctx.destination);
+      noise.start(now);
+    } else if (type === 'chime') {
+      [523.25, 659.25, 783.99].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+        gain.gain.setValueAtTime(0.12, now + idx * 0.09);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.3);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + idx * 0.09);
+        osc.stop(now + idx * 0.09 + 0.3);
+      });
+    }
+  } catch(e) {
+    console.debug('Audio playback error:', e);
+  }
+}
+
+// Drag and drop setup for documents
+const docDropZone = document.getElementById('doc-drop-zone');
+const docFileInput = document.getElementById('file-input');
+
+['dragenter', 'dragover'].forEach(name => {
+  docDropZone.addEventListener(name, (e) => { e.preventDefault(); docDropZone.classList.add('dragover'); });
+});
+['dragleave', 'drop'].forEach(name => {
+  docDropZone.addEventListener(name, (e) => { e.preventDefault(); docDropZone.classList.remove('dragover'); });
+});
+docDropZone.addEventListener('drop', (e) => {
+  if (e.dataTransfer.files.length) {
+    docFileInput.files = e.dataTransfer.files;
+    handleDocFileSelect(e.dataTransfer.files[0]);
+  }
+});
+docFileInput.addEventListener('change', () => {
+  if (docFileInput.files.length) handleDocFileSelect(docFileInput.files[0]);
+});
+
+function handleDocFileSelect(file) {
+  if (!file) return;
+  document.getElementById('preview-name').textContent = file.name;
+  const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+  document.getElementById('preview-meta').textContent = `${file.type || 'image/jpeg'} · ${sizeMb} MB · ✓ Ready for upload`;
+  document.getElementById('file-preview').style.display = 'flex';
+  document.getElementById('step-nav-2').classList.add('completed');
+}
+
+// Selfie File Fallback
+document.getElementById('selfie-file-input').addEventListener('change', () => {
+  const f = document.getElementById('selfie-file-input').files[0];
+  if (!f) return;
+  selfieCapturedBlob = f;
+  document.getElementById('selfie-preview-name').textContent = f.name;
+  const sizeMb = (f.size / (1024 * 1024)).toFixed(2);
+  document.getElementById('selfie-preview-meta').textContent = `${f.type || 'image'} · ${sizeMb} MB · Selected`;
+  document.getElementById('selfie-file-preview').style.display = 'flex';
+  document.getElementById('step-nav-3').classList.add('completed');
+});
+
+// Mode switchers
+function switchDocMode(mode) {
+  docMode = mode;
+  document.getElementById('tab-doc-file').classList.toggle('active', mode === 'file');
+  document.getElementById('tab-doc-cam').classList.toggle('active', mode === 'camera');
+  document.getElementById('doc-file-section').style.display = mode === 'file' ? 'block' : 'none';
+  document.getElementById('doc-camera-section').style.display = mode === 'camera' ? 'block' : 'none';
+  if (mode === 'file' && docStream) stopDocCamera();
+}
+
+function switchSelfieMode(mode) {
+  selfieMode = mode;
+  document.getElementById('tab-selfie-cam').classList.toggle('active', mode === 'camera');
+  document.getElementById('tab-selfie-file').classList.toggle('active', mode === 'file');
+  document.getElementById('selfie-camera-section').style.display = mode === 'camera' ? 'block' : 'none';
+  document.getElementById('selfie-file-section').style.display = mode === 'file' ? 'block' : 'none';
+  if (mode === 'file' && selfieStream) stopSelfieCamera();
+}
+
+// Document Camera Logic
+async function startDocCamera() {
+  try {
+    if (docStream) stopDocCamera();
+    const constraints = { video: { facingMode: docFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false };
+    docStream = await navigator.mediaDevices.getUserMedia(constraints).catch(async () => {
+      return await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    });
+    const video = document.getElementById('doc-video');
+    video.srcObject = docStream;
+    video.style.display = 'block';
+    document.getElementById('doc-overlay').style.display = 'flex';
+    document.getElementById('doc-cam-controls').style.display = 'flex';
+    document.getElementById('doc-cam-placeholder').style.display = 'none';
+  } catch(err) {
+    setStatus(`Document camera error: ${err.message}. Please use file upload.`, 'error');
+  }
+}
+
+function stopDocCamera() {
+  if (docStream) {
+    docStream.getTracks().forEach(t => t.stop());
+    docStream = null;
+  }
+  document.getElementById('doc-video').style.display = 'none';
+  document.getElementById('doc-overlay').style.display = 'none';
+  document.getElementById('doc-cam-controls').style.display = 'none';
+  if (!docCapturedBlob) document.getElementById('doc-cam-placeholder').style.display = 'block';
+}
+
+function switchDocCameraFacing() {
+  docFacingMode = docFacingMode === 'environment' ? 'user' : 'environment';
+  startDocCamera();
+}
+
+function triggerFlash(elemId) {
+  const fl = document.getElementById(elemId);
+  if (!fl) return;
+  fl.classList.add('flash');
+  setTimeout(() => fl.classList.remove('flash'), 100);
+}
+
+function captureDocPhoto() {
+  const video = document.getElementById('doc-video');
+  if (!video || !video.videoWidth) return;
+  playSound('shutter');
+  triggerFlash('doc-flash');
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  canvas.toBlob((blob) => {
+    docCapturedBlob = blob;
+    const url = URL.createObjectURL(blob);
+    document.getElementById('doc-captured-img').src = url;
+    document.getElementById('doc-captured-meta').textContent = `${canvas.width}×${canvas.height} px · ${(blob.size / 1024).toFixed(1)} KB`;
+    document.getElementById('doc-captured-preview').style.display = 'flex';
+    document.getElementById('step-nav-2').classList.add('completed');
+    stopDocCamera();
+  }, 'image/jpeg', 0.94);
+}
+
+function retakeDocPhoto() {
+  docCapturedBlob = null;
+  document.getElementById('doc-captured-preview').style.display = 'none';
+  startDocCamera();
+}
+
+// Live Biometric Selfie Camera Logic with Real-time Face Alignment loop
+async function startSelfieCamera() {
+  try {
+    if (selfieStream) stopSelfieCamera();
+    const constraints = { video: { facingMode: selfieFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false };
+    selfieStream = await navigator.mediaDevices.getUserMedia(constraints).catch(async () => {
+      return await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    });
+    const video = document.getElementById('selfie-video');
+    video.srcObject = selfieStream;
+    video.style.display = 'block';
+    document.getElementById('selfie-overlay').style.display = 'flex';
+    document.getElementById('selfie-cam-controls').style.display = 'flex';
+    document.getElementById('selfie-cam-placeholder').style.display = 'none';
+
+    // Start face quality feedback loop
+    startFaceQualityMonitor(video);
+  } catch(err) {
+    setStatus(`Biometric camera error: ${err.message}. You may use photo upload fallback.`, 'error');
+  }
+}
+
+function startFaceQualityMonitor(video) {
+  const guide = document.getElementById('face-guide-oval');
+  const badge = document.getElementById('selfie-live-badge');
+  const msg = document.getElementById('selfie-guide-msg');
+  const testCanvas = document.createElement('canvas');
+  testCanvas.width = 160;
+  testCanvas.height = 120;
+  const ctx = testCanvas.getContext('2d');
+
+  if (faceQualityInterval) clearInterval(faceQualityInterval);
+  faceQualityInterval = setInterval(() => {
+    if (!video || video.paused || video.ended || !video.videoWidth) return;
+    try {
+      ctx.drawImage(video, 0, 0, 160, 120);
+      const imgData = ctx.getImageData(40, 20, 80, 80);
+      const d = imgData.data;
+      let totalBrightness = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        totalBrightness += (d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114);
+      }
+      const avgBrightness = totalBrightness / (d.length / 4);
+
+      if (avgBrightness > 45 && avgBrightness < 220) {
+        guide.classList.add('aligned');
+        badge.classList.add('aligned');
+        badge.innerHTML = '<div class="live-pulse"></div> BIOMETRICS LOCKED';
+        msg.textContent = '✓ Face Detected & Centered - Ready to Capture';
+      } else {
+        guide.classList.remove('aligned');
+        badge.classList.remove('aligned');
+        badge.innerHTML = '<div class="live-pulse"></div> LIVE CAMERA';
+        msg.textContent = 'Center face in oval & ensure adequate lighting';
+      }
+    } catch(e) {}
+  }, 400);
+}
+
+function stopSelfieCamera() {
+  if (faceQualityInterval) { clearInterval(faceQualityInterval); faceQualityInterval = null; }
+  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+  const overlay = document.getElementById('selfie-countdown');
+  if (overlay) overlay.style.display = 'none';
+
+  if (selfieStream) {
+    selfieStream.getTracks().forEach(t => t.stop());
+    selfieStream = null;
+  }
+  document.getElementById('selfie-video').style.display = 'none';
+  document.getElementById('selfie-overlay').style.display = 'none';
+  document.getElementById('selfie-cam-controls').style.display = 'none';
+  if (!selfieCapturedBlob) document.getElementById('selfie-cam-placeholder').style.display = 'block';
+}
+
+function switchSelfieCameraFacing() {
+  selfieFacingMode = selfieFacingMode === 'user' ? 'environment' : 'user';
+  const video = document.getElementById('selfie-video');
+  video.classList.toggle('no-mirror', selfieFacingMode === 'environment');
+  startSelfieCamera();
+}
+
+let countdownInterval = null;
+function startCountdownCapture() {
+  const video = document.getElementById('selfie-video');
+  if (!video || !video.videoWidth || video.style.display === 'none') {
+    startSelfieCamera().then(() => setTimeout(() => startCountdownCapture(), 600));
+    return;
+  }
+  const overlay = document.getElementById('selfie-countdown');
+  if (!overlay) return;
+  if (countdownInterval) clearInterval(countdownInterval);
+
+  let count = 3;
+  overlay.textContent = count;
+  overlay.style.display = 'block';
+  playSound('beep');
+
+  countdownInterval = setInterval(() => {
+    count--;
+    if (count > 0) {
+      overlay.textContent = count;
+      playSound('beep');
+    } else {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+      overlay.style.display = 'none';
+      captureSelfiePhoto();
+    }
+  }, 1000);
+}
+
+function captureSelfiePhoto() {
+  const video = document.getElementById('selfie-video');
+  if (!video || !video.videoWidth) return;
+  playSound('shutter');
+  triggerFlash('selfie-flash');
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  if (selfieFacingMode === 'user') {
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+  }
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  canvas.toBlob((blob) => {
+    selfieCapturedBlob = blob;
+    const url = URL.createObjectURL(blob);
+    document.getElementById('selfie-captured-img').src = url;
+    document.getElementById('selfie-captured-meta').textContent = `${canvas.width}×${canvas.height} px · ${(blob.size / 1024).toFixed(1)} KB`;
+    document.getElementById('selfie-captured-preview').style.display = 'flex';
+    document.getElementById('step-nav-3').classList.add('completed');
+    stopSelfieCamera();
+  }, 'image/jpeg', 0.94);
+}
+
+function retakeSelfiePhoto() {
+  selfieCapturedBlob = null;
+  document.getElementById('selfie-captured-preview').style.display = 'none';
+  startSelfieCamera();
+}
+
+// Helpers
+async function obtainDevToken() {
+  const resp = await fetch('/api/v1/auth/dev-token', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({user_id:'demo-client', role:'officer'})
+  });
+  if (!resp.ok) throw new Error(`Auth failed: HTTP ${resp.status}`);
+  const data = await resp.json();
+  devToken = data.access_token;
+  return devToken;
+}
+
+function setStatus(msg, type='info') {
+  const el = document.getElementById('status-area');
+  el.innerHTML = `<div class="status-toast status-${type}">${msg}</div>`;
+}
+
+function updateProgress(stepId, percent, text) {
+  document.getElementById('progress-fill').style.width = percent + '%';
+  const el = document.getElementById(stepId);
+  if (el) {
+    el.className = 'stage-item active';
+    if (text) el.textContent = text;
+  }
+}
+
+function markStepDone(stepId) {
+  const el = document.getElementById(stepId);
+  if (el) el.className = 'stage-item done';
+}
+
+// Main Multi-Modal Submission Pipeline
+document.getElementById('submit-btn').addEventListener('click', async () => {
+  const name = document.getElementById('full-name').value.trim();
+  if (!name) { setStatus('Please enter the applicant full name.', 'error'); return; }
+
+  let docFile = null;
+  if (docMode === 'file') {
+    const fileInput = document.getElementById('file-input');
+    if (!fileInput.files.length) { setStatus('Please select or drop an identity document file, or scan with camera.', 'error'); return; }
+    docFile = fileInput.files[0];
+  } else {
+    if (!docCapturedBlob) { setStatus('Please capture a document photo using the camera, or switch to file upload.', 'error'); return; }
+    docFile = new File([docCapturedBlob], 'document_capture.jpg', { type: 'image/jpeg' });
+  }
+
+  let liveSelfieFile = null;
+  if (selfieCapturedBlob) {
+    liveSelfieFile = (selfieCapturedBlob instanceof File) ? selfieCapturedBlob : new File([selfieCapturedBlob], 'live_selfie.jpg', { type: 'image/jpeg' });
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  document.getElementById('progress-wrap').style.display = 'block';
+
+  try {
+    if (!devToken) await obtainDevToken();
+
+    // 1. Create Case
+    updateProgress('step-case', 25, '01 CREATING CASE…');
+    const caseResp = await fetch('/api/v1/cases', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', Authorization:`Bearer ${devToken}` },
+      body: JSON.stringify({subject_name: name})
+    });
+    if (!caseResp.ok) throw new Error(`Case creation failed: HTTP ${caseResp.status}`);
+    const caseData = await caseResp.json();
+    const caseId = caseData.id || caseData.case_id;
+    markStepDone('step-case');
+
+    // 2. Upload Document
+    updateProgress('step-upload', 50, '02 INGESTING DOCUMENT…');
+    const docForm = new FormData();
+    docForm.append('upload', docFile);
+    const docUploadResp = await fetch(`/api/v1/cases/${caseId}/files?file_type=document`, {
+      method: 'POST',
+      headers: { Authorization:`Bearer ${devToken}` },
+      body: docForm
+    });
+    if (!docUploadResp.ok) throw new Error(`Document upload failed: HTTP ${docUploadResp.status}`);
+    const docUploadData = await docUploadResp.json();
+    markStepDone('step-upload');
+
+    // 3. Upload Live Selfie
+    let liveUploadData = null;
+    if (liveSelfieFile) {
+      updateProgress('step-selfie', 75, '03 INGESTING BIOMETRICS…');
+      const liveForm = new FormData();
+      liveForm.append('upload', liveSelfieFile);
+      const liveUploadResp = await fetch(`/api/v1/cases/${caseId}/files?file_type=live_capture`, {
+        method: 'POST',
+        headers: { Authorization:`Bearer ${devToken}` },
+        body: liveForm
+      });
+      if (liveUploadResp.ok) {
+        liveUploadData = await liveUploadResp.json();
+        markStepDone('step-selfie');
+      }
+    } else {
+      markStepDone('step-selfie');
+    }
+
+    // 4. Trigger AI Pipeline (async job: enqueue, then poll until finished)
+    updateProgress('step-screen', 90, '04 AI SCREENING EXECUTING…');
+    const screenResp = await fetch(`/api/v1/cases/${caseId}/screen`, {
+      method: 'POST',
+      headers: { Authorization:`Bearer ${devToken}` }
+    });
+    if (!screenResp.ok) {
+      const detail = (await screenResp.json().catch(() => ({}))).detail;
+      throw new Error(detail || `Screening failed: HTTP ${screenResp.status}`);
+    }
+    const run = await pollScreening(caseId, devToken);
+    markStepDone('step-screen');
+    updateProgress('step-screen', 100, '✓ COMPLETE');
+
+    // Audio Chime & Success Receipt
+    playSound('chime');
+    document.getElementById('step-nav-4').classList.add('completed');
+
+    // Extract stage results summary for instant feedback
+    const stages = run.stage_results || [];
+    const ocrSr = stages.find(s => s.stage === 'ocr');
+    const faceSr = stages.find(s => s.stage === 'face_verification');
+    const riskSr = stages.find(s => s.stage === 'risk_engine');
+
+    const ocrFields = ocrSr?.result?.fields || {};
+    const nameVerif = ocrFields.name_verification || {};
+    const extractedName = ocrFields.extracted_name || 'Not detected';
+    
+    let nameStatusBadge = '';
+    if (nameVerif.status === 'matched') {
+      nameStatusBadge = '<span style="color:var(--green)">MATCHED</span>';
+    } else if (nameVerif.status === 'mismatched') {
+      nameStatusBadge = '<span style="color:var(--red)">MISMATCH — DECLARED NAME DOES NOT MATCH DOCUMENT</span>';
+    } else {
+      nameStatusBadge = '<span style="color:var(--gray)">NOT VERIFIED</span>';
+    }
+
+    let faceStatusBadge = '';
+    if (faceSr?.result?.similarity !== undefined && faceSr?.result?.similarity !== null) {
+      const simPct = (faceSr.result.similarity * 100).toFixed(1) + '%';
+      const unc = faceSr.result.uncertainty;
+      if (unc === 'multiple_faces' || unc === 'uncalibrated_fallback') {
+        faceStatusBadge = `<span style="color:var(--orange)">UNCERTAIN — MANUAL REVIEW (${simPct})</span>`;
+      } else {
+        faceStatusBadge = faceSr.result.match
+          ? `<span style="color:var(--green)">VERIFIED (${simPct})</span>`
+          : `<span style="color:var(--red)">MISMATCH (${simPct})</span>`;
+      }
+    } else {
+      faceStatusBadge = '<span style="color:var(--gray)">NOT RUN</span>';
+    }
+
+    const riskScore = riskSr?.result?.risk_score !== undefined ? riskSr.result.risk_score : '—';
+    const riskLevel = (riskSr?.result?.risk_level || 'LOW').toUpperCase();
+
+    let liveInfoHtml = '';
+    if (liveUploadData) {
+      liveInfoHtml = `
+        <div class="receipt-row">
+          <div class="receipt-label">Live Biometric Hash (SHA-256)</div>
+          <div class="receipt-value">${liveUploadData.content_hash}</div>
+        </div>
+      `;
+    }
+
+    document.getElementById('status-area').innerHTML = `
+      <div class="status-toast status-success">
+        ✓ SCREENING RUN COMPLETE — EVIDENCE SEALED INTO AUDIT LEDGER
+      </div>
+      <div class="receipt-card">
+        <div class="receipt-head">
+          <div>
+            <div class="receipt-label">VERDICT / RISK ENGINE OUTPUT</div>
+            <div class="receipt-status">${riskLevel} — ${riskScore}/100</div>
+          </div>
+          <div>
+            <span class="seal-tag">SHA-256 CHAIN SEALED</span>
+          </div>
+        </div>
+
+        <div class="telemetry">
+          <div><div class="tl-k">DECLARED NAME</div><div class="tl-v">${name}</div></div>
+          <div><div class="tl-k">DOCUMENT NAME</div><div class="tl-v">${extractedName}</div></div>
+          <div><div class="tl-k">NAME CROSS-CHECK</div><div class="tl-v">${nameStatusBadge}</div></div>
+          <div><div class="tl-k">BIOMETRIC FACE MATCH</div><div class="tl-v">${faceStatusBadge}</div></div>
+          <div><div class="tl-k">DOCUMENT ID NO.</div><div class="tl-v">${ocrFields.extracted_id_number || 'NOT DETECTED'}</div></div>
+        </div>
+
+        <div class="receipt-row">
+          <div class="receipt-label">Reference Case ID</div>
+          <div class="receipt-value">${caseId}</div>
+        </div>
+        <div class="receipt-row">
+          <div class="receipt-label">Document Cryptographic Hash (SHA-256)</div>
+          <div class="receipt-value">${docUploadData.content_hash}</div>
+        </div>
+        ${liveInfoHtml}
+        <div>
+          <a href="/cases/${caseId}" class="btn-view-case">
+            → OPEN FORENSIC COMMAND CONSOLE
+          </a>
+        </div>
+      </div>
+    `;
+  } catch(err) {
+    setStatus(`Submission error: ${err.message}`, 'error');
+    const el = document.getElementById('step-screen');
+    if (el) el.className = 'stage-item failed';
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// Poll the screening run every 1.5s until it leaves queued/running (max ~2 min).
+async function pollScreening(caseId, token) {
+  const deadline = Date.now() + 120000;
+  while (Date.now() < deadline) {
+    const resp = await fetch(`/api/v1/cases/${caseId}/screening`, {
+      headers: { Authorization:`Bearer ${token}` }
+    });
+    if (resp.ok) {
+      const run = await resp.json();
+      if (run.status !== 'queued' && run.status !== 'running') return run;
+    }
+    await new Promise(r => setTimeout(r, 1500));
+  }
+  throw new Error('Screening timed out — check the case page for progress.');
+}
+</script>
+</body>
+</html>

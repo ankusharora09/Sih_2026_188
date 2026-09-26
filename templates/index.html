@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-assisted identity document screening and explainable fraud-risk analysis">
+    <title>Document Integrity Verifier</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page-glow glow-one"></div>
+    <div class="page-glow glow-two"></div>
+
+    <main class="app-shell">
+        <header class="topbar">
+            <a class="brand" href="/" aria-label="Document Integrity Verifier home">
+                <span class="brand-mark">DI</span>
+                <span>
+                    <strong>Document Integrity</strong>
+                </span>
+            </a>
+        </header>
+
+        <section class="hero-section">
+            <div>
+                <h1>Verify document integrity.</h1>
+            </div>
+        </section>
+
+        <form id="screeningForm" action="/analyze" method="POST" enctype="multipart/form-data" novalidate>
+            <div class="workspace-grid">
+                <section class="panel upload-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="step-number">01</span>
+                            <div>
+                                <h2>Upload document</h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="dropArea" class="drop-area" tabindex="0" role="button" aria-label="Choose a document image">
+                        <input class="file-input" type="file" name="document_image" id="fileInput" accept="image/jpeg,image/png,image/jpg" required>
+                        <div class="upload-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M5 14.5v3A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5v-3" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <h3>Drop an image here</h3>
+                        <p>or <span class="browse-link">browse from your device</span></p>
+                    </div>
+
+                    <div id="fileInfo" class="file-info is-hidden">
+                        <div class="file-icon">IMG</div>
+                        <div class="file-copy">
+                            <strong id="fileName">document.png</strong>
+                            <span id="fileMeta">Ready for analysis</span>
+                        </div>
+                        <button id="removeFile" class="icon-button" type="button" aria-label="Remove selected file">×</button>
+                    </div>
+
+                    <div id="previewWrap" class="preview-wrap is-hidden">
+                        <div class="preview-toolbar">
+                            <span>LIVE PREVIEW</span>
+                            <span id="overlayLegend" class="overlay-legend is-hidden"><i></i> flagged regions</span>
+                        </div>
+                        <div id="previewStage" class="preview-stage">
+                            <img id="imagePreview" alt="Selected document preview">
+                            <div id="issueOverlay" class="issue-overlay" aria-hidden="true"></div>
+                        </div>
+                        <p class="preview-hint">Flagged regions appear here after analysis.</p>
+                    </div>
+                </section>
+
+                <section class="panel details-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="step-number">02</span>
+                            <div>
+                                <h2>Document details</h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <label class="field-group">
+                            <span>Document type</span>
+                            <select name="document_type" id="documentType">
+                                <option value="">Select type</option>
+                                <option value="passport">Passport</option>
+                                <option value="id_card">ID card</option>
+                                <option value="driver_license">Driver's license</option>
+                                <option value="visa">Visa</option>
+                            </select>
+                        </label>
+                        <label class="field-group">
+                            <span>Document number</span>
+                            <input type="text" name="document_number" placeholder="e.g. P12345678" autocomplete="off">
+                        </label>
+                        <label class="field-group field-wide">
+                            <span>Full name</span>
+                            <input type="text" name="full_name" placeholder="e.g. John Doe" autocomplete="off">
+                        </label>
+                        <label class="field-group">
+                            <span>Nationality</span>
+                            <input type="text" name="nationality" placeholder="e.g. USA" autocomplete="off">
+                        </label>
+                        <label class="field-group">
+                            <span>Date of birth</span>
+                            <input type="text" name="date_of_birth" placeholder="YYYY-MM-DD" autocomplete="off">
+                        </label>
+                        <label class="field-group">
+                            <span>Expiry date</span>
+                            <input type="text" name="expiry_date" placeholder="YYYY-MM-DD" autocomplete="off">
+                        </label>
+                    </div>
+
+                </section>
+            </div>
+
+            <div class="action-row">
+                <button id="analyzeButton" class="primary-button" type="submit">
+                    <span>Analyze document</span>
+                </button>
+            </div>
+        </form>
+
+        <div id="errorBanner" class="error-banner is-hidden" role="alert"></div>
+        <div id="loadingState" class="loading-state is-hidden" aria-live="polite">
+            <div class="loader"></div>
+            <strong>Analyzing document…</strong>
+        </div>
+
+        <section id="resultsSection" class="results-section is-hidden" aria-live="polite">
+            <div class="results-heading">
+                <div>
+                    <h2>Analysis result</h2>
+                </div>
+                <button id="newScanButton" class="secondary-button" type="button">← New scan</button>
+            </div>
+
+            <div class="recommendation-card">
+                <span class="recommendation-label">MODEL SUGGESTION</span>
+                <strong id="modelRecommendation">—</strong>
+                <span id="modelRecommendationDetail"></span>
+            </div>
+
+            <div class="summary-grid">
+                <article id="decisionCard" class="summary-card decision-card">
+                    <div class="summary-card-top"><span>FINAL DECISION</span><span id="decisionIcon" class="decision-icon">—</span></div>
+                    <strong id="decisionValue">—</strong>
+                    <p id="decisionText">Waiting for analysis</p>
+                </article>
+                <article class="summary-card risk-card">
+                    <div class="summary-card-top"><span>RISK SCORE</span><span>0–1</span></div>
+                    <strong id="riskValue">—</strong>
+                    <div class="risk-track"><span id="riskFill"></span></div>
+                    <p id="riskLevel">—</p>
+                </article>
+                <article class="summary-card model-card">
+                    <div class="summary-card-top"><span>VISUAL MODEL</span><span id="modelLabel">—</span></div>
+                    <strong id="modelConfidence">—</strong>
+                    <p id="modelText">ResNet18 prediction</p>
+                </article>
+                <article class="summary-card type-card">
+                    <div class="summary-card-top"><span>DOCUMENT TYPE</span><span>OCR / layout</span></div>
+                    <strong id="documentTypeValue">—</strong>
+                    <p id="ocrConfidence">OCR confidence: —</p>
+                </article>
+            </div>
+
+            <div class="details-toggle-row">
+                <button id="detailsToggle" class="secondary-button details-toggle" type="button" aria-expanded="false" aria-controls="fullDetails">
+                    <span>View more details</span><span id="detailsToggleIcon">＋</span>
+                </button>
+            </div>
+
+            <div id="fullDetails" class="details-collapsible is-hidden">
+              <div class="results-grid">
+                <article class="panel result-panel explanation-panel">
+                    <div class="result-panel-heading"><div><p class="panel-kicker">DECISION SUPPORT</p><h3>Why this result?</h3></div><span id="issueCount" class="count-badge">0 issues</span></div>
+                    <p id="explanationSummary" class="explanation-summary">No explanation available yet.</p>
+                    <div id="issueList" class="issue-list"></div>
+                </article>
+
+                <article class="panel result-panel ocr-panel">
+                    <div class="result-panel-heading"><div><p class="panel-kicker">TEXT EXTRACTION</p><h3>OCR output</h3></div><span id="ocrStatus" class="small-status">—</span></div>
+                    <p class="result-help">The complete text returned by OCR appears first, followed by structured fields extracted from it.</p>
+                    <pre id="ocrText" class="ocr-text">No OCR text returned yet.</pre>
+                    <div id="ocrFields" class="data-list"></div>
+                </article>
+
+                <article class="panel result-panel forensics-panel">
+                    <div class="result-panel-heading"><div><p class="panel-kicker">IMAGE FORENSICS</p><h3>Visual evidence</h3></div><span id="forensicsStatus" class="small-status">—</span></div>
+                    <div id="forensicsIssues" class="tag-list"></div>
+                    <div id="forensicsMetrics" class="metric-grid"></div>
+                </article>
+
+                <article class="panel result-panel rules-panel-new">
+                    <div class="result-panel-heading"><div><p class="panel-kicker">VALIDATION</p><h3>Rules and watchlist</h3></div><span id="watchlistStatus" class="small-status">No match</span></div>
+                    <div class="validation-columns">
+                        <div><span class="validation-label pass-label">PASSED</span><ul id="passedRules" class="compact-list"></ul></div>
+                        <div><span class="validation-label fail-label">FLAGGED</span><ul id="failedRules" class="compact-list"></ul></div>
+                    </div>
+                </article>
+              </div>
+
+              <div class="review-callout">
+                  <span class="callout-icon">!</span>
+                  <div><strong>Recommended action</strong><p id="reviewText">Use the evidence above as a screening aid and manually verify any suspicious document.</p></div>
+              </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const form = document.getElementById('screeningForm');
+        const fileInput = document.getElementById('fileInput');
+        const dropArea = document.getElementById('dropArea');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileMeta = document.getElementById('fileMeta');
+        const previewWrap = document.getElementById('previewWrap');
+        const imagePreview = document.getElementById('imagePreview');
+        const issueOverlay = document.getElementById('issueOverlay');
+        const overlayLegend = document.getElementById('overlayLegend');
+        const loadingState = document.getElementById('loadingState');
+        const errorBanner = document.getElementById('errorBanner');
+        const resultsSection = document.getElementById('resultsSection');
+        const detailsToggle = document.getElementById('detailsToggle');
+        const fullDetails = document.getElementById('fullDetails');
+        const detailsToggleIcon = document.getElementById('detailsToggleIcon');
+        let selectedFile = null;
+        let previewUrl = null;
+
+        function formatBytes(bytes) {
+            if (!bytes) return '0 KB';
+            const units = ['B', 'KB', 'MB'];
+            const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+            return `${(bytes / Math.pow(1024, index)).toFixed(index ? 1 : 0)} ${units[index]}`;
+        }
+
+        function setError(message) {
+            errorBanner.textContent = message || '';
+            errorBanner.classList.toggle('is-hidden', !message);
+        }
+
+        function setFile(file) {
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                setError('Please choose a JPG or PNG image.');
+                return;
+            }
+            if (file.size > 16 * 1024 * 1024) {
+                setError('This file is larger than the 16 MB upload limit.');
+                return;
+            }
+            setError('');
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileMeta.textContent = `${formatBytes(file.size)} · Ready for analysis`;
+            fileInfo.classList.remove('is-hidden');
+            previewWrap.classList.remove('is-hidden');
+            dropArea.classList.add('has-file');
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+            previewUrl = URL.createObjectURL(file);
+            imagePreview.src = previewUrl;
+            issueOverlay.replaceChildren();
+            overlayLegend.classList.add('is-hidden');
+        }
+
+        function clearFile() {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.add('is-hidden');
+            previewWrap.classList.add('is-hidden');
+            dropArea.classList.remove('has-file');
+            issueOverlay.replaceChildren();
+            overlayLegend.classList.add('is-hidden');
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+            previewUrl = null;
+        }
+
+        function closeDetails() {
+            fullDetails.classList.add('is-hidden');
+            detailsToggle.setAttribute('aria-expanded', 'false');
+            detailsToggle.querySelector('span').textContent = 'View more details';
+            detailsToggleIcon.textContent = '＋';
+        }
+
+        fileInput.addEventListener('change', () => setFile(fileInput.files[0]));
+        document.getElementById('removeFile').addEventListener('click', clearFile);
+        dropArea.addEventListener('click', (event) => {
+            if (event.target !== fileInput) fileInput.click();
+        });
+        dropArea.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); fileInput.click(); }
+        });
+        ['dragenter', 'dragover'].forEach((name) => dropArea.addEventListener(name, (event) => {
+            event.preventDefault(); dropArea.classList.add('dragging');
+        }));
+        ['dragleave', 'drop'].forEach((name) => dropArea.addEventListener(name, (event) => {
+            event.preventDefault(); dropArea.classList.remove('dragging');
+        }));
+        dropArea.addEventListener('drop', (event) => setFile(event.dataTransfer.files[0]));
+
+        function textElement(tag, text, className) {
+            const element = document.createElement(tag);
+            if (className) element.className = className;
+            element.textContent = text == null ? '' : String(text);
+            return element;
+        }
+
+        function prettyLabel(value) {
+            return String(value || '').replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+        }
+
+        function renderIssues(issues) {
+            const list = document.getElementById('issueList');
+            list.replaceChildren();
+            issueOverlay.replaceChildren();
+            if (!issues || !issues.length) {
+                list.appendChild(textElement('p', 'No specific issues were returned by the available checks.', 'empty-result'));
+                overlayLegend.classList.add('is-hidden');
+                return;
+            }
+            overlayLegend.classList.remove('is-hidden');
+            issues.forEach((issue, index) => {
+                const severity = String(issue.severity || 'LOW').toLowerCase();
+                const item = document.createElement('div');
+                item.className = `issue-item severity-${severity}`;
+                const head = document.createElement('div');
+                head.className = 'issue-item-head';
+                head.append(textElement('span', `${index + 1}. ${issue.title || 'Flagged indicator'}`, 'issue-title'));
+                head.append(textElement('span', severity.toUpperCase(), 'severity-pill'));
+                item.append(head);
+                item.append(textElement('p', issue.description || 'No further description available.', 'issue-description'));
+                const meta = document.createElement('div');
+                meta.className = 'issue-meta';
+                meta.append(textElement('span', `Source: ${prettyLabel(issue.source || 'unknown')}`));
+                meta.append(textElement('span', `Confidence: ${Math.round(Number(issue.confidence || 0) * 100)}%`));
+                item.append(meta);
+                list.append(item);
+
+                const box = issue.bounding_box || issue.location;
+                if (box && Number.isFinite(Number(box.x))) {
+                    const marker = document.createElement('span');
+                    marker.className = `issue-box box-${severity}`;
+                    marker.title = issue.title || 'Flagged region';
+                    marker.dataset.label = issue.title || 'Flagged region';
+                    marker.style.left = `${Number(box.x) * 100}%`;
+                    marker.style.top = `${Number(box.y) * 100}%`;
+                    marker.style.width = `${Number(box.width) * 100}%`;
+                    marker.style.height = `${Number(box.height) * 100}%`;
+                    issueOverlay.append(marker);
+                }
+            });
+        }
+
+        function renderDataList(containerId, data) {
+            const container = document.getElementById(containerId);
+            container.replaceChildren();
+            const entries = Object.entries(data || {}).filter(([key]) => key !== 'boxed');
+            if (!entries.length) {
+                container.append(textElement('p', 'No structured OCR fields were returned.', 'empty-result'));
+                return;
+            }
+            entries.forEach(([key, value]) => {
+                const row = document.createElement('div');
+                row.className = 'data-row';
+                row.append(textElement('span', prettyLabel(key), 'data-key'));
+                row.append(textElement('strong', typeof value === 'object' ? JSON.stringify(value) : value, 'data-value'));
+                container.append(row);
+            });
+        }
+
+        function renderList(containerId, values, emptyText) {
+            const list = document.getElementById(containerId);
+            list.replaceChildren();
+            if (!values || !values.length) {
+                list.append(textElement('li', emptyText, 'list-empty'));
+                return;
+            }
+            values.forEach((value) => list.append(textElement('li', prettyLabel(value), '')));
+        }
+
+        function renderMetrics(metrics) {
+            const grid = document.getElementById('forensicsMetrics');
+            grid.replaceChildren();
+            const entries = Object.entries(metrics || {}).filter(([key]) => key !== 'best_reference');
+            entries.slice(0, 8).forEach(([key, value]) => {
+                const item = document.createElement('div');
+                item.className = 'metric-item';
+                item.append(textElement('span', prettyLabel(key), 'metric-key'));
+                item.append(textElement('strong', typeof value === 'number' ? value.toFixed(3) : value, 'metric-value'));
+                grid.append(item);
+            });
+            if (!entries.length) grid.append(textElement('p', 'No forensic metrics were returned.', 'empty-result'));
+        }
+
+        function renderResult(result) {
+            const risk = result.risk || {};
+            const visual = result.visual_prediction || {};
+            const ocr = result.ocr || {};
+            const forensics = result.image_forensics || {};
+            const explanation = result.explanation || {};
+            const riskScore = Number(risk.score || result.risk_score || 0);
+            const decision = result.decision || 'UNKNOWN';
+            const issues = explanation.issues || result.issues || [];
+            const riskLevel = risk.level || 'LOW';
+
+            document.getElementById('decisionValue').textContent = decision.replaceAll('_', ' ');
+            document.getElementById('decisionText').textContent = decision === 'ACCEPT' ? 'No strong fraud evidence found' : 'Manual verification is recommended';
+            document.getElementById('decisionIcon').textContent = decision === 'ACCEPT' ? '✓' : '!';
+            document.getElementById('decisionCard').className = `summary-card decision-card decision-${decision.toLowerCase()}`;
+            document.getElementById('riskValue').textContent = riskScore.toFixed(2);
+            document.getElementById('riskLevel').textContent = `${riskLevel} risk · ${Math.round(riskScore * 100)} / 100`;
+            document.getElementById('riskFill').style.width = `${Math.max(2, Math.min(100, riskScore * 100))}%`;
+            document.getElementById('riskFill').className = `risk-fill risk-fill-${riskLevel.toLowerCase()}`;
+            document.getElementById('modelLabel').textContent = visual.label || 'UNAVAILABLE';
+            document.getElementById('modelConfidence').textContent = `${Math.round(Number(visual.confidence || 0) * 100)}%`;
+            document.getElementById('modelText').textContent = visual.fraud_score != null ? `Fraud score: ${Number(visual.fraud_score).toFixed(3)}` : 'No model score returned';
+            document.getElementById('documentTypeValue').textContent = prettyLabel(result.document_type || 'unknown');
+            document.getElementById('ocrConfidence').textContent = `OCR confidence: ${Math.round(Number(ocr.confidence || 0) * 100)}%`;
+            const modelSuggestion = visual.label === 'FORGED'
+                ? 'Possible forgery detected'
+                : visual.label === 'GENUINE'
+                    ? 'Likely genuine'
+                    : 'Manual review required';
+            document.getElementById('modelRecommendation').textContent = modelSuggestion;
+            document.getElementById('modelRecommendationDetail').textContent = `${decision.replaceAll('_', ' ')} · ${Math.round(Number(visual.fraud_score || 0) * 100)}% visual risk`;
+            document.getElementById('issueCount').textContent = `${issues.length} issue${issues.length === 1 ? '' : 's'}`;
+            document.getElementById('explanationSummary').textContent = explanation.summary || 'No explanation summary returned.';
+            document.getElementById('ocrStatus').textContent = ocr.fields?.status === 'unavailable' ? 'UNAVAILABLE' : (ocr.fields?.status === 'insufficient_evidence' ? 'LIMITED' : 'AVAILABLE');
+            document.getElementById('forensicsStatus').textContent = forensics.suspicious ? 'SUSPICIOUS' : 'NO ALERT';
+            document.getElementById('watchlistStatus').textContent = result.watchlist?.match ? 'MATCH FOUND' : 'NO MATCH';
+            document.getElementById('watchlistStatus').className = `small-status ${result.watchlist?.match ? 'status-danger' : ''}`;
+            document.getElementById('reviewText').textContent = decision === 'ACCEPT' ? 'No strong indicator was returned, but the system is a screening aid and not an authenticity guarantee.' : 'Inspect the original document and verify it against a trusted source before accepting it.';
+            document.getElementById('ocrText').textContent = ocr.text || ocr.raw_text || ocr.fields?.note || 'No OCR text was returned. Check that pytesseract and the Tesseract OCR engine are installed.';
+            closeDetails();
+
+            renderIssues(issues);
+            renderDataList('ocrFields', ocr.fields);
+            renderMetrics(forensics.metrics);
+            document.getElementById('forensicsIssues').replaceChildren();
+            (forensics.issues || []).forEach((item) => document.getElementById('forensicsIssues').append(textElement('span', item, 'evidence-tag')));
+            if (!(forensics.issues || []).length) document.getElementById('forensicsIssues').append(textElement('span', 'No forensic issue labels', 'empty-result'));
+            renderList('passedRules', result.rule_validation?.passed, 'No passed rules reported');
+            renderList('failedRules', result.rule_validation?.failed_rules, 'No rule failures reported');
+            resultsSection.classList.remove('is-hidden');
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (!selectedFile) {
+                setError('Please choose a document image before starting the analysis.');
+                dropArea.focus();
+                return;
+            }
+            setError('');
+            resultsSection.classList.add('is-hidden');
+            loadingState.classList.remove('is-hidden');
+            document.getElementById('analyzeButton').disabled = true;
+            const payload = new FormData();
+            payload.append('image', selectedFile);
+            try {
+                const response = await fetch('/api/analyze', { method: 'POST', body: payload });
+                const result = await response.json();
+                if (!response.ok || result.error) throw new Error(result.error || `Analysis failed (${response.status})`);
+                renderResult(result);
+            } catch (error) {
+                setError(error.message || 'Analysis failed. Please try again.');
+            } finally {
+                loadingState.classList.add('is-hidden');
+                document.getElementById('analyzeButton').disabled = false;
+            }
+        });
+
+        document.getElementById('newScanButton').addEventListener('click', () => {
+            resultsSection.classList.add('is-hidden');
+            closeDetails();
+            clearFile();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        detailsToggle.addEventListener('click', () => {
+            const isOpening = fullDetails.classList.toggle('is-hidden') === false;
+            detailsToggle.setAttribute('aria-expanded', String(isOpening));
+            detailsToggle.querySelector('span').textContent = isOpening ? 'Hide details' : 'View more details';
+            detailsToggleIcon.textContent = isOpening ? '－' : '＋';
+        });
+    </script>
+</body>
+</html>

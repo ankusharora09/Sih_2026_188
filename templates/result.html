@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screening Result - Document Integrity Verifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Animation container */
+        .animation-container {
+            position: relative;
+            height: 180px;
+        }
+
+        .steps-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(15px);
+            animation: fadeInUp 0.7s ease-out forwards;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(30, 41, 59, 0.35);
+            border-radius: 10px;
+            padding: 0.75rem 1.25rem;
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+            font-weight: 500;
+            color: #e2e8f0;
+            min-width: 220px;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--accent-blue);
+            transform: scaleY(0);
+            transform-origin: bottom;
+            transition: transform 0.5s ease;
+        }
+
+        .step.animate::before {
+            transform: scaleY(1);
+        }
+
+        /* Stagger animation for steps */
+        .step:nth-child(1) { animation-delay: 0.15s; }
+        .step:nth-child(2) { animation-delay: 0.3s; }
+        .step:nth-child(3) { animation-delay: 0.45s; }
+        .step:nth-child(4) { animation-delay: 0.6s; }
+        .step:nth-child(5) { animation-delay: 0.75s; }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Main content initially hidden */
+        .main-content {
+            opacity: 0;
+            transform: translateY(15px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .main-content.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Flag header */
+        .flag-header {
+            text-align: center;
+            margin-bottom: 1.75rem;
+            padding: 1.25rem;
+            background: rgba(15, 23, 42, 0.35);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .flag-header h2 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .flag-header .status-badge {
+            font-size: 1rem;
+            padding: 0.35rem 0.7rem;
+        }
+
+        .flag-header .risk-badge {
+            font-size: 2rem;
+            padding: 0.75rem 1.25rem;
+            margin: 0.5rem 0;
+        }
+
+        /* OCR Panel - focused on key fields */
+        .ocr-panel {
+            background: rgba(30, 41, 59, 0.35);
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid var(--border-color);
+            margin: 1.25rem 0;
+        }
+
+        .ocr-panel h4 {
+            color: #60a5fa;
+            margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .ocr-details {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .ocr-detail {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .ocr-detail span {
+            font-weight: 500;
+            color: #94a3b8;
+        }
+
+        .ocr-detail span.value {
+            font-weight: 600;
+            color: #e2e8f0;
+            min-width: 120px;
+            display: inline-block;
+        }
+
+        /* Flagged Reasons Section - more prominent */
+        .reasons-section {
+            background: rgba(30, 41, 59, 0.35);
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid var(--border-color);
+            margin: 1.25rem 0;
+            position: relative;
+        }
+
+        .reasons-section::before {
+            content: "🔍 DETECTION SIGNALS";
+            position: absolute;
+            top: -0.75rem;
+            left: 1.25rem;
+            background: rgba(15, 23, 42, 0.6);
+            color: #60a5fa;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            border: 1px solid rgba(96, 165, 250, 0.3);
+        }
+
+        .reasons-section h3 {
+            margin: 0 0 1rem 0;
+            color: #60a5fa;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.25rem;
+        }
+
+        .reason-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.25);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .reason-item h4 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0;
+            color: #60a5fa;
+            font-size: 1.1rem;
+        }
+
+        .reason-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .reason-explanation {
+            color: #e2e8f0;
+            line-height: 1.5;
+            font-size: 0.9rem;
+        }
+
+        /* View document button */
+        .view-doc-btn {
+            display: inline-block;
+            background: var(--accent-blue);
+            color: white;
+            padding: 0.65rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 500;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: background 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .view-doc-btn:hover {
+            background: var(--accent-blue-hover);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .step {
+                min-width: 180px;
+                font-size: 0.9rem;
+                padding: 0.6rem 1rem;
+            }
+
+            .flag-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .flag-header .risk-badge {
+                font-size: 1.7rem;
+                padding: 0.6rem 1rem;
+            }
+
+            .ocr-details {
+                grid-template-columns: 1fr;
+            }
+
+            .reasons-section::before {
+                top: -0.6rem;
+                left: 1rem;
+                font-size: 0.8rem;
+                padding: 0.2rem 0.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-container result-content">
+        <!-- Animation Steps -->
+        <div class="animation-container">
+            <div class="steps-wrapper" id="stepsContainer">
+                <div class="step"><span>📄</span> Document Scan</div>
+                <div class="step"><span>🔍</span> AI Analysis</div>
+                <div class="step"><span>📝</span> OCR Extraction</div>
+                <div class="step"><span>⚠️</span> Risk Detection</div>
+                <div class="step"><span>✅</span> Final Result</div>
+            </div>
+        </div>
+
+        <!-- Main Content (initially hidden) -->
+        <div class="main-content" id="mainContent">
+            <!-- Header -->
+            <div class="flag-header">
+                {% if risk_level in ['MEDIUM', 'HIGH'] %}
+                    <h2>🔴 DOCUMENT FLAGGED</h2>
+                    <span class="status-badge status-suspicious">Suspicious</span>
+                {% else %}
+                    <h2>✅ DOCUMENT SCREENING COMPLETE</h2>
+                    <span class="status-badge status-no-suspicious">No Suspicious Indicators Detected</span>
+                {% endif %}
+                <span class="risk-badge badge-{{ risk_level|lower }}">{{ risk_level }} RISK</span>
+            </div>
+
+            <!-- Document Preview -->
+            {% if stored_filename %}
+            <div class="glass-panel">
+                <h3>Analyzed Document</h3>
+                <div class="document-image-container">
+                    <img src="{{ url_for('uploaded_file', filename=stored_filename) }}" alt="Analyzed Document" class="document-image">
+                    <div class="document-info">
+                        <div class="info-item">
+                            <span class="info-label">File:</span>
+                            <span class="info-value">{{ filename }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- OCR Information Panel - only show fields that have values -->
+            {% if ocr_confidence > 0 %}
+            <div class="glass-panel ocr-panel">
+                <h4>OCR EXTRACTION RESULTS</h4>
+                <div class="ocr-details">
+                    <div class="ocr-detail">
+                        <span>OCR Confidence:</span>
+                        <span class="value">{{ (ocr_confidence * 100)|round(0) }}%</span>
+                    </div>
+                    {% if ocr_extracted_name | length > 0 %}
+                    <div class="ocr-detail">
+                        <span>Name:</span>
+                        <span class="value">{{ ocr_extracted_name }}</span>
+                    </div>
+                    {% endif %}
+                    {% if 'date_of_birth' in ocr_fields and ocr_fields['date_of_birth'] | length > 0 %}
+                    <div class="ocr-detail">
+                        <span>Date of Birth:</span>
+                        <span class="value">{{ ocr_fields['date_of_birth'] }}</span>
+                    </div>
+                    {% endif %}
+                    {% if 'document_number' in ocr_fields and ocr_fields['document_number'] | length > 0 %}
+                    <div class="ocr-detail">
+                        <span>Document Number:</span>
+                        <span class="value">{{ ocr_fields['document_number'] }}</span>
+                    </div>
+                    {% endif %}
+                    {% if ocr_full_text | length > 0 %}
+                    <div class="ocr-detail">
+                        <span>Text Preview:</span>
+                        <span class="value">{{ (ocr_full_text[:100] + '...') if ocr_full_text else '' }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Flagged Reasons Section - more prominent -->
+            {% if risk_level in ['MEDIUM', 'HIGH'] %}
+            <div class="glass-panel reasons-section">
+                <h3>Why Was This Document Flagged?</h3>
+                <p>The following detection signals contributed to the flag:</p>
+
+                <!-- Visual Analysis -->
+                {% if visual_result and visual_result.prediction == 'FORGED' %}
+                <div class="reason-item">
+                    <h4>🔍 Visual Analysis</h4>
+                    <div class="reason-status">
+                        <span class="status-badge status-suspicious">Suspicious</span>
+                    </div>
+                    <p class="reason-explanation">{{ visual_result.confidence_label }}</p>
+                </div>
+                {% endif %}
+
+                <!-- OCR / Text Validation -->
+                {% if rule_result and not rule_result.is_valid %}
+                <div class="reason-item">
+                    <h4>📝 OCR / Text Validation</h4>
+                    <div class="reason-status">
+                        <span class="status-badge status-suspicious">Suspicious</span>
+                    </div>
+                    <p class="reason-explanation">Document rule validation failed</p>
+                </div>
+                {% endif %}
+
+                <!-- MRZ Validation -->
+                {% if rule_result %}
+                {% set mrz_val = rule_result.field_validations | selectattr('field_name', 'equalto', 'mrz_checksum') | list if rule_result else [] %}
+                {% if mrz_val and mrz_val[0].result.value != 'pass' %}
+                <div class="reason-item">
+                    <h4>🏷️ MRZ Validation</h4>
+                    <div class="reason-status">
+                        <span class="status-badge status-suspicious">Suspicious</span>
+                    </div>
+                    <p class="reason-explanation">{{ mrz_val[0].message }}</p>
+                </div>
+                {% endif %}
+                {% endif %}
+
+                <!-- Watchlist Check -->
+                {% if rule_result %}
+                {% set watch_val = rule_result.field_validations | selectattr('field_name', 'equalto', 'document_number') | list if rule_result else [] %}
+                {% if watch_val and 'watchlist' in watch_val[0].message|lower and watch_val[0].result.value == 'fail' %}
+                <div class="reason-item">
+                    <h4>🚨 Watchlist Check</h4>
+                    <div class="reason-status">
+                        <span class="status-badge status-suspicious">Suspicious</span>
+                    </div>
+                    <p class="reason-explanation">{{ watch_val[0].message }}</p>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Disclaimer -->
+            <div class="glass-panel disclaimer-panel">
+                <p>
+                    AI-assisted screening recommendation. This prototype supports human review and does not constitute
+                    an official determination of document authenticity or identity.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {
+            const stepsContainer = document.getElementById('stepsContainer');
+            const mainContent = document.getElementById('mainContent');
+
+            // Get all steps
+            const steps = stepsContainer.querySelectorAll('.step');
+
+            // Add animate class to each step with delay
+            steps.forEach((step, index) => {
+                setTimeout(() => {
+                    step.classList.add('animate');
+                }, (index + 1) * 150); // Stagger by 150ms
+            });
+
+            // After the last step animation ends, show main content
+            const lastStepIndex = steps.length - 1;
+            const lastStep = steps[lastStepIndex];
+
+            // Wait for the last step's animation to end
+            setTimeout(() => {
+                // Fade in main content after a brief delay
+                setTimeout(() => {
+                    mainContent.classList.add('visible');
+                }, 250); // Wait for steps to complete
+            }, ((lastStepIndex + 1) * 150) + 700); // Last step delay + animation duration
+        });
+    </script>
+</body>
+</html>
