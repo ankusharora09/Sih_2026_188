@@ -268,7 +268,6 @@ Prototype -> Controlled Pilot -> Scaled Deployment -> Government System Integrat
 | Document upload | WORKING | JPEG, PNG, TIFF (PDF via pdf2image if installed) |
 | OpenCV preprocessing | WORKING | Quality, detection, perspective, rotation, enhancement |
 | Tesseract OCR | WORKING | Tesseract 5.5.3 at C:\Program Files\Tesseract-OCR |
-| PaddleOCR | NOT INSTALLED | Falls back to Tesseract automatically |
 | Screening pipeline | WORKING | Full pipeline runs end-to-end in ~1-2s |
 | Tampering detection | WORKING | ELA + noise inconsistency (real CV, not mocked) |
 | Face verification | WORKING | YuNet + SFace ONNX models loaded, 128-dim embeddings |
